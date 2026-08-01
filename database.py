@@ -6,27 +6,22 @@ import os
 from datetime import datetime
 
 # ============================================
-# اصلاح رشته اتصال (مشکل postgres vs postgresql)
+# اصلاح رشته اتصال
 # ============================================
 def get_database_url():
-    """دریافت و اصلاح رشته اتصال دیتابیس"""
     db_url = os.getenv("DATABASE_URL")
-    
     if not db_url:
         print("⚠️ DATABASE_URL is not set!")
         return None
-    
-    # تبدیل postgres:// به postgresql:// (برای SQLAlchemy 2.0+)
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
         print("✅ Fixed DATABASE_URL: postgres:// → postgresql://")
-    
     return db_url
 
 DATABASE_URL = get_database_url()
 
 # ============================================
-# راه‌اندازی موتور دیتابیس (با مدیریت خطا)
+# راه‌اندازی موتور دیتابیس
 # ============================================
 engine = None
 SessionLocal = None
@@ -45,8 +40,6 @@ if DATABASE_URL:
         print("✅ Database engine created successfully")
     except Exception as e:
         print(f"❌ Failed to create database engine: {e}")
-        engine = None
-        SessionLocal = None
 
 # ============================================
 # مدل‌های دیتابیس
@@ -73,39 +66,26 @@ class ArticleEmbedding(Base):
     article_id = Column(BigInteger, nullable=False)
     chunk_index = Column(Integer, nullable=False)
     chunk_text = Column(Text, nullable=False)
+    # embeddings به صورت JSON در TEXT ذخیره می‌شوند (موقتاً)
+    embedding_json = Column(Text)  # JSON string از لیست اعداد
     created_at = Column(DateTime, default=datetime.utcnow)
 
 # ============================================
-# تابع راه‌اندازی دیتابیس (مقاوم در برابر خطا)
+# تابع راه‌اندازی
 # ============================================
 def init_db():
-    """ساخت جداول - اگر دیتابیس در دسترس نبود، خطا نمی‌دهد"""
     if not engine:
-        print("⚠️ Database engine not available, skipping init_db")
+        print("⚠️ Database engine not available")
         return False
     
     try:
-        with engine.connect() as conn:
-            # فعال‌سازی pgvector
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-            conn.commit()
-            print("✅ pgvector extension enabled")
-        
-        # ساخت جداول
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created successfully!")
         return True
-        
-    except OperationalError as e:
-        print(f"⚠️ Database connection error (will retry later): {e}")
-        return False
     except Exception as e:
-        print(f"⚠️ Database initialization error: {e}")
+        print(f"⚠️ Database init error: {e}")
         return False
 
-# ============================================
-# تابع دریافت session
-# ============================================
 def get_db():
     if not SessionLocal:
         raise Exception("Database not available")
@@ -114,12 +94,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-# ============================================
-# تست سریع
-# ============================================
-if __name__ == "__main__":
-    if init_db():
-        print("✅ Database test successful!")
-    else:
-        print("⚠️ Database not ready yet")

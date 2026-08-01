@@ -4,6 +4,6 @@ openai
 pydantic
 python-dotenv
 psycopg2-binary
-pgvector
 sqlalchemy
 alembic
+arxiv
