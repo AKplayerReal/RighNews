@@ -278,6 +278,61 @@ async def process_article(req: ProcessRequest):
             "status": "error",
             "error": str(e)
         }
+@app.get("/articles")
+def list_articles(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    """
+    لیست مقالات ذخیره شده (از جدید به قدیمی)
+    """
+    try:
+        articles = (
+            db.query(Article)
+            .order_by(Article.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        
+        return {
+            "count": len(articles),
+            "articles": [
+                {
+                    "id": a.id,
+                    "source_type": a.source_type,
+                    "title_english": a.title_english,
+                    "title_persian": a.title_persian,
+                    "content_english": a.content_english[:200] + "..." if a.content_english else None,
+                    "content_persian": a.content_persian[:200] + "..." if a.content_persian else None,
+                    "verified": a.verified,
+                    "fact_check_notes": a.fact_check_notes,
+                    "published_at": str(a.published_at) if a.published_at else None,
+                    "created_at": str(a.created_at) if a.created_at else None,
+                }
+                for a in articles
+            ]
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/articles/{article_id}")
+def get_article(article_id: int, db: Session = Depends(get_db)):
+    """دریافت یک مقاله خاص با جزئیات کامل"""
+    article = db.query(Article).filter(Article.id == article_id).first()
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    return {
+        "id": article.id,
+        "source_url": article.source_url,
+        "source_type": article.source_type,
+        "title_english": article.title_english,
+        "title_persian": article.title_persian,
+        "content_english": article.content_english,
+        "content_persian": article.content_persian,
+        "verified": article.verified,
+        "fact_check_notes": article.fact_check_notes,
+        "published_at": str(article.published_at) if article.published_at else None,
+        "created_at": str(article.created_at) if article.created_at else None,
+    }
 # ============================================
 # اجرای سرور
 # ============================================
