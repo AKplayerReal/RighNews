@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 import os
 import uvicorn
 
-# Import از فایل database.py که قبلاً ساختیم
 from database import init_db, get_db, Article
 
 # ============================================
@@ -18,21 +17,21 @@ app = FastAPI(
 )
 
 # ============================================
-# مدل‌های Pydantic (ساختار ورودی/خروجی)
+# مدل‌های Pydantic
 # ============================================
 class ArticleRequest(BaseModel):
     english_text: str
 
 class TranslationResponse(BaseModel):
     persian_translation: str
-    model_used: str = "gemma-3-27b-it"
+    model_used: str = "deepseek-v4-flash"
+    reasoning_used: bool = False
 
 # ============================================
-# رویداد Startup: راه‌اندازی دیتابیس هنگام شروع سرور
+# رویداد Startup
 # ============================================
 @app.on_event("startup")
 async def startup_event():
-    """ساخت جداول و فعال‌سازی pgvector هنگام بالا آمدن سرور"""
     try:
         init_db()
         print("✅ Database initialized successfully")
@@ -45,11 +44,11 @@ async def startup_event():
 
 @app.get("/")
 def read_root():
-    """صفحه اصلی - تست زنده بودن سرور"""
     return {
         "message": "RighNews Core is alive! 🚀",
         "service": "Modular AI News Agency",
         "version": "1.0.0",
+        "model": "DeepSeek V4 Flash via GapGPT",
         "endpoints": {
             "docs": "/docs",
             "health": "/health",
@@ -60,16 +59,17 @@ def read_root():
 
 @app.get("/health")
 def health_check():
-    """برای مانیتورینگ و health check"""
     return {
         "status": "healthy",
         "service": "righnews",
+        "model": "deepseek-v4-flash",
+        "provider": "GapGPT",
         "database": "connected" if os.getenv("DATABASE_URL") else "not configured"
     }
 
 @app.post("/translate-test", response_model=TranslationResponse)
 async def translate_test(req: ArticleRequest):
-    """ترجمه متن انگلیسی فناوری به فارسی با استفاده از GapGPT"""
+    """ترجمه متن انگلیسی فناوری به فارسی با DeepSeek V4 Flash"""
     api_key = os.getenv("GAPGPT_API_KEY")
     if not api_key:
         raise HTTPException(
@@ -77,7 +77,7 @@ async def translate_test(req: ArticleRequest):
             detail="GAPGPT_API_KEY is missing in environment variables!"
         )
     
-    # اتصال به API اختصاصی GapGPT
+    # اتصال به GapGPT
     client = OpenAI(
         base_url="https://api.gapgpt.app/v1",
         api_key=api_key
@@ -85,19 +85,41 @@ async def translate_test(req: ArticleRequest):
     
     try:
         chat_completion = client.chat.completions.create(
-            model="gemma-3-27b-it",
+            model="deepseek-v4-flash",
             messages=[
                 {
                     "role": "system", 
-                    "content": "تو یک روزنامه‌نگار حرفه‌ای فناوری هستی. متن انگلیسی زیر را به فارسی روان و دقیق ترجمه کن. از اصطلاحات استاندارد فناوری فارسی استفاده کن. هیچ توضیح اضافی یا احوال‌پرسی اضافه نکن."
+                    "content": """تو یک روزنامه‌نگار حرفه‌ای و متخصص فناوری هستی. 
+وظیفه تو ترجمه دقیق و روان متون فناوری از انگلیسی به فارسی است.
+
+قوانین مهم:
+- فقط ترجمه کن، هیچ توضیح یا تفسیری اضافه نکن
+- از اصطلاحات استاندارد فناوری فارسی استفاده کن (مثلاً: هوش مصنوعی، یادگیری ماشین، رایانش ابری)
+- اعداد و نام‌های خاص (مثل Apple, M3, RTX 4090) را به انگلیسی نگه دار
+- لحن خبری و حرفه‌ای را حفظ کن
+- مستقیماً ترجمه را خروجی بده، بدون هیچ پیش‌گفتار یا پس‌گفتار"""
                 },
                 {"role": "user", "content": req.english_text}
             ],
-            temperature=0.2
+            temperature=0.3,  # کمی بالاتر برای روانی بیشتر
+            # پارامترهای اختیاری برای کنترل reasoning
+            extra_body={
+                "enable_thinking": False  # غیرفعال کردن reasoning برای سرعت بیشتر
+            } if False else None  # این خط را می‌توانید حذف کنید اگر API پشتیبانی نمی‌کند
         )
+        
+        # استخراج متن ترجمه
+        translated_text = chat_completion.choices[0].message.content
+        
+        # بررسی وجود reasoning (فقط برای اطلاع)
+        reasoning_used = hasattr(chat_completion.choices[0].message, 'reasoning_content') and \
+                         chat_completion.choices[0].message.reasoning_content is not None
+        
         return TranslationResponse(
-            persian_translation=chat_completion.choices[0].message.content
+            persian_translation=translated_text,
+            reasoning_used=reasoning_used
         )
+        
     except Exception as e:
         raise HTTPException(
             status_code=500, 
@@ -106,9 +128,7 @@ async def translate_test(req: ArticleRequest):
 
 @app.get("/db-test")
 def db_test(db: Session = Depends(get_db)):
-    """تست اتصال به دیتابیس PostgreSQL"""
     try:
-        # شمارش مقالات موجود
         article_count = db.query(Article).count()
         return {
             "status": "connected",
@@ -124,9 +144,8 @@ def db_test(db: Session = Depends(get_db)):
         }
 
 # ============================================
-# اجرای سرور (فقط برای تست لوکال یا Docker)
+# اجرای سرور
 # ============================================
 if __name__ == "__main__":
-    # خواندن پورت از متغیر محیطی گردو (اگر نبود، پیش‌فرض 8000)
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
