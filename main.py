@@ -254,6 +254,30 @@ def force_init_database(secret: str = ""):
     return results
     
     # بقیه کد مثل قبل
+from processor import ArticleProcessor
+from pydantic import BaseModel
+
+class ProcessRequest(BaseModel):
+    arxiv_id: str
+
+@app.post("/process-article")
+async def process_article(req: ProcessRequest):
+    """
+    پردازش کامل یک مقاله از arXiv:
+    ۱. دانلود مقاله
+    ۲. ترجمه عنوان و چکیده
+    ۳. راستی‌آزمایی اعداد
+    ۴. ذخیره در دیتابیس
+    """
+    try:
+        processor = ArticleProcessor()
+        result = processor.process(req.arxiv_id)
+        return result
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 # ============================================
 # اجرای سرور
 # ============================================
