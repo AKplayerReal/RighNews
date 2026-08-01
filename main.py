@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from openai import OpenAI
 import os
+import uvicorn
 
 app = FastAPI(title="RighNews Core API")
 
@@ -12,13 +13,16 @@ class ArticleRequest(BaseModel):
 def read_root():
     return {"message": "RighNews Core is alive! 🚀"}
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "righnews"}
+
 @app.post("/translate-test")
 async def translate_test(req: ArticleRequest):
     api_key = os.getenv("GAPGPT_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=500, detail="GAPGPT_API_KEY is missing in Gerdoo!")
+        raise HTTPException(status_code=500, detail="GAPGPT_API_KEY is missing!")
     
-    # اتصال به API اختصاصی GapGPT
     client = OpenAI(
         base_url="https://api.gapgpt.app/v1",
         api_key=api_key
@@ -39,3 +43,8 @@ async def translate_test(req: ArticleRequest):
         return {"persian_translation": chat_completion.choices[0].message.content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"GapGPT API Error: {str(e)}")
+
+# این بلوک فقط وقتی فایل مستقیماً اجرا شود کار می‌کند
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
