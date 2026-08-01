@@ -149,6 +149,109 @@ def init_database_manually(secret: str = ""):
     
     if secret != ADMIN_SECRET:
         raise HTTPException(status_code=403, detail="Invalid secret")
+@app.post("/force-init-db")
+def force_init_database(secret: str = ""):
+    """
+    ساخت اجباری جداول با اجرای مستقیم SQL
+    این endpoint خطاها را به طور کامل نمایش می‌دهد
+    """
+    import traceback
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "righnews-admin-2026")
+    
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    
+    from database import engine, DATABASE_URL
+    from sqlalchemy import text
+    
+    results = {
+        "database_url_present": bool(DATABASE_URL),
+        "engine_present": bool(engine),
+        "steps": []
+    }
+    
+    if not engine:
+        results["error"] = "Database engine not available"
+        return results
+    
+    try:
+        # مرحله ۱: فعال‌سازی pgvector
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            conn.commit()
+            results["steps"].append({"step": "pgvector", "status": "success"})
+    except Exception as e:
+        results["steps"].append({
+            "step": "pgvector", 
+            "status": "error", 
+            "error": str(e)
+        })
+    
+    try:
+        # مرحله ۲: ساخت جدول articles
+        create_articles = """
+        CREATE TABLE IF NOT EXISTS articles (
+            id BIGSERIAL PRIMARY KEY,
+            source_url TEXT UNIQUE NOT NULL,
+            source_type VARCHAR(50) NOT NULL,
+            title_english TEXT NOT NULL,
+            title_persian TEXT,
+            content_english TEXT NOT NULL,
+            content_persian TEXT,
+            published_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            verified BOOLEAN DEFAULT FALSE,
+            fact_check_notes TEXT
+        );
+        """
+        with engine.connect() as conn:
+            conn.execute(text(create_articles))
+            conn.commit()
+            results["steps"].append({"step": "articles_table", "status": "success"})
+    except Exception as e:
+        results["steps"].append({
+            "step": "articles_table",
+            "status": "error",
+            "error": str(e)
+        })
+    
+    try:
+        # مرحله ۳: ساخت جدول article_embeddings
+        create_embeddings = """
+        CREATE TABLE IF NOT EXISTS article_embeddings (
+            id BIGSERIAL PRIMARY KEY,
+            article_id BIGINT NOT NULL,
+            chunk_index INTEGER NOT NULL,
+            chunk_text TEXT NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+        """
+        with engine.connect() as conn:
+            conn.execute(text(create_embeddings))
+            conn.commit()
+            results["steps"].append({"step": "embeddings_table", "status": "success"})
+    except Exception as e:
+        results["steps"].append({
+            "step": "embeddings_table",
+            "status": "error",
+            "error": str(e)
+        })
+    
+    # بررسی نهایی
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name IN ('articles', 'article_embeddings')
+            """))
+            tables = [row[0] for row in result]
+            results["created_tables"] = tables
+    except Exception as e:
+        results["check_error"] = str(e)
+    
+    return results
     
     # بقیه کد مثل قبل
 # ============================================
