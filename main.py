@@ -142,7 +142,15 @@ def db_test(db: Session = Depends(get_db)):
             "error": str(e),
             "message": "Database connection failed"
         }
-
+@app.post("/init-db")
+def init_database_manually(secret: str = ""):
+    """ساخت دستی جداول - نیاز به رمز دارد"""
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "righnews-admin-2026")
+    
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    
+    # بقیه کد مثل قبل
 # ============================================
 # اجرای سرور
 # ============================================
