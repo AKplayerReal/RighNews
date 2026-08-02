@@ -88,6 +88,30 @@ def api_root():
             "docs": "/docs",
         },
     }
+@app.post("/articles/{article_id}/reprocess")
+def reprocess_article(article_id: int, secret: str = "", db: Session = Depends(get_db)):
+    """حذف و پردازش مجدد یک مقاله (برای اصلاح ترجمه‌های خراب)"""
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "righnews-admin-2026")
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    article = db.query(Article).filter(Article.id == article_id).first()
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+
+    # استخراج شناسه arXiv از لینک منبع
+    match = re.search(r'(\d{4}\.\d{4,5})', article.source_url or "")
+    if not match:
+        raise HTTPException(status_code=400, detail="Cannot extract arXiv ID from source_url")
+    arxiv_id = match.group(1)
+
+    # حذف نسخه قدیمی
+    db.delete(article)
+    db.commit()
+
+    # پردازش مجدد با پرامپت اصلاح‌شده
+    processor = ArticleProcessor()
+    return processor.process(arxiv_id)
 # ============================================
 # 🌐 صفحات HTML سایت رای‌نیوز
 # ============================================

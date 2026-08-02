@@ -60,30 +60,53 @@ class Translator:
             base_url="https://api.gapgpt.app/v1",
             api_key=api_key
         )
-    
-    def translate_to_persian(self, text: str, context: str = "tech") -> str:
-        """ترجمه متن به فارسی با DeepSeek V4 Flash"""
-        system_prompt = f"""تو یک روزنامه‌نگار حرفه‌ای فناوری هستی.
-متن انگلیسی را به فارسی روان و دقیق ترجمه کن.
-قوانین:
-- فقط ترجمه کن، هیچ توضیح اضافی نده
-- از اصطلاحات استاندارد فناوری فارسی استفاده کن
-- اعداد و نام‌های خاص را حفظ کن
-- لحن حرفه‌ای و خبری"""
-        
-        try:
-            completion = self.client.chat.completions.create(
-                model="deepseek-v4-flash",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": text}
-                ],
-                temperature=0.3
-            )
-            return completion.choices[0].message.content
-        except Exception as e:
-            print(f"❌ Translation error: {e}")
-            return f"[Translation Failed: {str(e)}]"
+        self.system_prompt = """You are a professional Persian (Farsi) tech journalist.
+
+ABSOLUTE RULES:
+1. Translate ONLY into Persian (Farsi) using the Persian script.
+2. NEVER output Chinese, Japanese, Korean, or any non-Persian script.
+3. Keep numbers, model names (GPT-3, BERT, M3), and proper nouns in English.
+4. Use standard Persian technical terminology.
+5. Output ONLY the translation — no explanations, no notes.
+
+Correct examples:
+- "Neural networks" → "شبکه‌های عصبی"
+- "Attention mechanism" → "سازوکار توجه"
+
+YOU MUST ALWAYS RESPOND IN PERSIAN."""
+
+    @staticmethod
+    def _has_chinese(text: str) -> bool:
+        """تشخیص کاراکتر چینی در متن"""
+        return bool(re.search(r'[\u4e00-\u9fff]', text))
+
+    def translate_to_persian(self, text: str, context: str = "tech", max_retries: int = 2) -> str:
+        """ترجمه با تلاش مجدد خودکار در صورت تشخیص چینی"""
+        last = ""
+        for attempt in range(max_retries + 1):
+            try:
+                user_msg = f"Translate the following English text into Persian:\n\n{text}"
+                if attempt > 0:
+                    user_msg = (
+                        "IMPORTANT: Your previous output was in Chinese, which is WRONG. "
+                        "Translate into PERSIAN (Farsi script) this time.\n\n" + user_msg
+                    )
+                completion = self.client.chat.completions.create(
+                    model="deepseek-v4-flash",
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": user_msg},
+                    ],
+                    temperature=0.1,
+                )
+                last = completion.choices[0].message.content
+                if not self._has_chinese(last):
+                    return last
+                print(f"⚠️ Chinese detected (attempt {attempt + 1}), retrying...")
+            except Exception as e:
+                print(f"❌ Translation error: {e}")
+                return f"[Translation Failed: {str(e)}]"
+        return last
 
 # ============================================
 # ۳. ماژول راستی‌آزمایی (Fact-Checker)
