@@ -54,11 +54,11 @@ class Article(Base):
     title_persian = Column(Text)
     content_english = Column(Text, nullable=False)
     content_persian = Column(Text)
+    image_url = Column(Text)  # ← جدید
     published_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
     verified = Column(Boolean, default=False)
     fact_check_notes = Column(Text)
-
 class ArticleEmbedding(Base):
     __tablename__ = "article_embeddings"
     

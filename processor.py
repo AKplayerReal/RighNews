@@ -11,7 +11,7 @@ from datetime import datetime
 from openai import OpenAI
 from database import engine, Article, ArticleEmbedding, SessionLocal
 from sqlalchemy.orm import Session
-
+from image_picker import pick_image
 # ============================================
 # ۱. ماژول جمع‌آوری (Collector)
 # ============================================
@@ -197,7 +197,17 @@ class ArticleProcessor:
             "verified": verified,
             "notes": notes
         })
-        
+        # مرحله ۴.۵: انتخاب تصویر هوشمند
+        image_url = pick_image(
+            paper["title_english"],
+            paper["content_english"],
+            article_id=None  # چون هنوز ID نداریم
+            )
+        result["steps"].append({
+            "step": "pick_image",
+            "status": "success",
+            "image_url": image_url,
+        })
         # مرحله ۵: ذخیره در دیتابیس
         try:
             db = SessionLocal()
@@ -222,10 +232,12 @@ class ArticleProcessor:
                     title_persian=title_fa,
                     content_english=paper["content_english"],
                     content_persian=content_fa,
+                    image_url=image_url,  # ← جدید
                     published_at=paper["published_at"],
                     verified=verified,
                     fact_check_notes=notes,
-                )
+                    )
+                
                 db.add(article)
                 db.commit()
                 db.refresh(article)

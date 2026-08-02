@@ -141,6 +141,32 @@ async def upload_image_endpoint(
     if not url:
         raise HTTPException(status_code=400, detail="Invalid file type")
     return {"url": url}
+@app.post("/migrate-add-image")
+def migrate_add_image(secret: str = ""):
+    """افزودن ستون image_url به جدول articles"""
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "righnews-admin-2026")
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    
+    from database import engine
+    from sqlalchemy import text
+    
+    try:
+        with engine.connect() as conn:
+            # بررسی وجود ستون
+            result = conn.execute(text("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name='articles' AND column_name='image_url'
+            """))
+            if result.fetchone():
+                return {"status": "already_exists", "message": "Column already present"}
+            
+            # افزودن ستون
+            conn.execute(text("ALTER TABLE articles ADD COLUMN image_url TEXT"))
+            conn.commit()
+            return {"status": "success", "message": "Column image_url added"}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 # ============================================
 # 🌐 صفحات HTML سایت رای‌نیوز
 # ============================================
