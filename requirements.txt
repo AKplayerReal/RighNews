@@ -9,3 +9,6 @@ alembic
 arxiv
 jinja2
 jdatetime
+sqladmin
+python-multipart
+aiofiles

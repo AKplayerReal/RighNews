@@ -10,6 +10,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 import jdatetime
 import re
+from fastapi.staticfiles import StaticFiles
+from admin import setup_admin
 
 # ============================================
 # راه‌اندازی اولیه FastAPI
@@ -19,6 +21,15 @@ app = FastAPI(
     description="Modular AI News Agency for Persian Tech News",
     version="1.0.0"
 )
+# ============================================
+# فایل‌های استاتیک (تصاویر آپلود شده)
+# ============================================
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# ============================================
+# پنل ادمین (در مسیر /admin)
+# ============================================
+setup_admin(app)
 # ============================================
 # قالب‌های HTML (سایت رای‌نیوز)
 # ============================================
@@ -113,6 +124,23 @@ def reprocess_article(article_id: int, secret: str = "", db: Session = Depends(g
     # پردازش مجدد با پرامپت اصلاح‌شده
     processor = ArticleProcessor()
     return processor.process(arxiv_id)
+from fastapi import UploadFile, File
+
+@app.post("/admin/upload-image")
+async def upload_image_endpoint(
+    file: UploadFile = File(...),
+    secret: str = "",
+):
+    """آپلود تصویر از طریق API (برای استفاده در پنل سفارشی)"""
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "righnews-admin-2026")
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    
+    from admin import upload_image as do_upload
+    url = await do_upload(file)
+    if not url:
+        raise HTTPException(status_code=400, detail="Invalid file type")
+    return {"url": url}
 # ============================================
 # 🌐 صفحات HTML سایت رای‌نیوز
 # ============================================
