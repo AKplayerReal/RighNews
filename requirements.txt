@@ -12,3 +12,4 @@ jdatetime
 sqladmin
 python-multipart
 aiofiles
+itsdangerous 
