@@ -208,7 +208,7 @@ async def new_article_page(request: Request):
         return RedirectResponse(url="/admin/login", status_code=303)
         "article_form.html",
         {"request": request, "user": user, "article": None}
-    )
+    
 
 @admin_router.post("/articles/new")
 async def create_article(
