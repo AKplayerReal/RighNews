@@ -37,188 +37,164 @@
 
 {% block content %}
 
+<!-- نوار پیشرفت خواندن -->
+<div id="progress" role="progressbar" aria-label="پیشرفت خواندن"></div>
+
 <!-- ═══════════════════════════════════════════════════ -->
-<!-- 🧭 نوار بالا                                       -->
+<!-- 🧭 نوار بالا (sticky)                             -->
 <!-- ═══════════════════════════════════════════════════ -->
-<div class="bg-ink text-paper">
-  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2 hover:text-accent transition-colors text-sm">
-      <span class="transition-transform duration-300 hover:-translate-x-1">→</span>
-      بازگشت به صفحه اصلی
-    </a>
-    <a href="/" class="font-display text-xl">
-      رای‌<span class="text-accent">نیوز</span>
-    </a>
+<div class="article-topbar">
+  <div class="container">
+    <div class="article-topbar-inner">
+      <a href="/" class="back-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        <span>بازگشت</span>
+      </a>
+      <a href="/" class="mini-logo">رای‌<span style="color: var(--accent);">نیوز</span></a>
+    </div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════ -->
 <!-- 📰 محتوای مقاله                                    -->
 <!-- ═══════════════════════════════════════════════════ -->
-<article class="max-w-5xl mx-auto px-4 py-12">
+<article class="article">
+  <div class="container">
 
-  <!-- متادیتا -->
-  <header class="mb-10 fade-up">
-    <div class="flex flex-wrap items-center gap-3 text-xs mb-5">
-      <span class="font-mono bg-ink text-paper px-2 py-1" dir="ltr">{{ article.source_type }}</span>
-      {% if article.verified %}
-      <span class="bg-mint/10 text-mint px-3 py-1 font-semibold">✓ راستی‌آزمایی شد</span>
-      {% else %}
-      <span class="bg-signal/10 text-signal px-3 py-1 font-semibold">⚠ نیاز به بازبینی</span>
-      {% endif %}
-      <span class="text-ink/50">{{ article.published_at | fadate }}</span>
-      <span class="font-mono text-ink/30 ms-auto" dir="ltr">#{{ article.id }}</span>
-    </div>
-
-    <h1 class="font-display text-4xl md:text-6xl leading-[1.15] mb-4">
-      {{ article.title_persian }}
-    </h1>
-    <p class="font-mono text-ink/50 text-sm md:text-base" dir="ltr">
-      {{ article.title_english }}
-    </p>
-  </header>
-
-  <!-- تصویر اصلی مقاله -->
-  {% if article.image_url %}
-  <figure class="mb-10 relative overflow-hidden fade-up" style="animation-delay: 60ms">
-    <div class="image-wrapper">
-      <img src="{{ article.image_url }}" alt="{{ article.title_persian }}" 
-           class="w-full h-64 md:h-96 object-cover"
-           loading="eager">
-    </div>
-    <figcaption class="absolute bottom-0 right-0 bg-ink/80 text-paper/70 text-xs font-mono px-3 py-1.5" dir="ltr">
-      {{ article.source_type.upper() }} · #{{ article.id }}
-    </figcaption>
-  </figure>
-  {% endif %}
-
-  <!-- گزارش راستی‌آزمایی -->
-  <div class="border-s-4 border-brand bg-brand/5 p-5 mb-10 flex gap-3 fade-up" style="animation-delay: 120ms">
-    <span class="text-2xl shrink-0">🛡️</span>
-    <div class="flex-1">
-      <h2 class="font-bold mb-1">گزارش راستی‌آزمایی</h2>
-      <p class="text-sm leading-7 text-ink/75">{{ article.fact_check_notes }}</p>
-    </div>
-  </div>
-
-  <!-- محتوای دوزبانه -->
-  <div class="grid lg:grid-cols-2 gap-8 items-start">
-    
-    <!-- ستون ترجمه فارسی -->
-    <section class="bg-white border border-ink/10 p-7 fade-up" style="animation-delay: 200ms">
-      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-ink/10">
-        <span class="text-3xl">🇮🇷</span>
-        <h2 class="font-display text-2xl text-brand">ترجمه فارسی</h2>
+    <!-- متادیتا -->
+    <header class="reveal" style="--d: 100ms">
+      <div class="article-meta">
+        <span class="badge badge-src">{{ article.source_type }}</span>
+        {% if article.verified %}
+        <span class="meta-read">✓ راستی‌آزمایی شد</span>
+        {% else %}
+        <span class="meta-read" style="background: #fff6e3; border-color: #ffd98f; color: #8a5a00;">⚠ نیاز به بازبینی</span>
+        {% endif %}
+        <time class="meta-date" datetime="{{ article.published_at }}">{{ article.published_at | fadate }}</time>
+        <span class="meta-date mono" dir="ltr">#{{ article.id }}</span>
       </div>
-      <p class="leading-9 text-lg text-ink/85 whitespace-pre-wrap">{{ article.content_persian }}</p>
+
+      <h1 class="article-title">{{ article.title_persian }}</h1>
+      <p class="article-en" dir="ltr">{{ article.title_english }}</p>
+    </header>
+
+    <!-- تصویر اصلی -->
+    {% if article.image_url %}
+    <figure class="article-hero reveal" style="--d: 200ms">
+      <img src="{{ article.image_url }}" alt="{{ article.title_persian }}" loading="eager" data-fallback>
+      <figcaption class="mono" dir="ltr">
+        {{ article.source_type.upper() }} · #{{ article.id }}
+      </figcaption>
+    </figure>
+    {% endif %}
+
+    <!-- گزارش راستی‌آزمایی -->
+    <div class="fact-check {% if not article.verified %}pending{% endif %} reveal" style="--d: 300ms">
+      <svg class="fact-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        {% if article.verified %}
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        {% else %}
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01"/>
+        {% endif %}
+      </svg>
+      <div>
+        <h2 class="fact-title">گزارش راستی‌آزمایی</h2>
+        <p class="fact-text">{{ article.fact_check_notes }}</p>
+      </div>
+    </div>
+
+    <!-- محتوای دوزبانه -->
+    <section class="bilingual reveal" style="--d: 400ms">
+      <!-- ستون ترجمه فارسی -->
+      <div class="col-fa">
+        <div class="col-label">
+          <span>🇮🇷 ترجمه فارسی</span>
+          <span class="mono">PERSIAN</span>
+        </div>
+        <div class="prose">
+          {% for para in article.content_persian.split('\n\n') %}
+          <p>{{ para }}</p>
+          {% endfor %}
+        </div>
+        <p class="translator-note mono">
+          ترجمه‌شده توسط: deepseek-v4-flash · {{ article.created_at | fadate }}
+        </p>
+      </div>
+
+      <!-- ستون متن اصلی (sticky) -->
+      <div class="col-en">
+        <div class="col-label">
+          <span>🇬🇧 Original Abstract</span>
+          <span class="mono">ENGLISH</span>
+        </div>
+        <div class="prose-en">
+          {% for para in article.content_english.split('\n\n') %}
+          <p>{{ para }}</p>
+          {% endfor %}
+        </div>
+      </div>
     </section>
 
-    <!-- ستون متن اصلی (sticky) -->
-    <section class="bg-ink text-paper p-7 lg:sticky lg:top-6 fade-up" style="animation-delay: 280ms" dir="ltr">
-      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-paper/10">
-        <span class="text-3xl">🇬🇧</span>
-        <h2 class="font-mono text-sm text-accent">ORIGINAL ABSTRACT</h2>
-      </div>
-      <p class="leading-8 text-paper/80 text-[15px]">{{ article.content_english }}</p>
-    </section>
-  </div>
-
-  <!-- شناسنامه مقاله -->
-  <footer class="mt-10 bg-white border border-ink/10 p-6 fade-up" style="animation-delay: 340ms">
-    <h3 class="font-display text-xl mb-4">🗂️ شناسنامه مقاله</h3>
-    <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm font-mono" dir="ltr">
-      {% if article.source_url %}
-      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
-        <dt class="text-ink/50">SOURCE</dt>
-        <dd>
-          <a href="{{ article.source_url }}" target="_blank" rel="noopener noreferrer"
-             class="text-brand hover:text-accent flex items-center gap-1">
-            arxiv.org <span class="text-xs">↗</span>
+    <!-- شناسنامه مقاله -->
+    <section class="spec reveal" style="--d: 500ms">
+      <h3 class="spec-head">
+        <span class="spec-mark" aria-hidden="true"></span>
+        <span>🗂️ شناسنامه مقاله</span>
+      </h3>
+      <div class="spec-row">
+        <dt class="spec-key">SOURCE</dt>
+        <dd class="spec-val">
+          {% if article.source_url %}
+          <a href="{{ article.source_url }}" target="_blank" rel="noopener noreferrer">
+            arxiv.org ↗
           </a>
+          {% else %}
+          —
+          {% endif %}
         </dd>
       </div>
-      {% endif %}
-      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
-        <dt class="text-ink/50">TRANSLATOR</dt>
-        <dd>deepseek-v4-flash</dd>
+      <div class="spec-row">
+        <dt class="spec-key">TRANSLATOR</dt>
+        <dd class="spec-val">deepseek-v4-flash</dd>
       </div>
-      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
-        <dt class="text-ink/50">PUBLISHED</dt>
-        <dd>{{ article.published_at | fadate }}</dd>
+      <div class="spec-row">
+        <dt class="spec-key">PUBLISHED</dt>
+        <dd class="spec-val">{{ article.published_at | fadate }}</dd>
       </div>
-      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
-        <dt class="text-ink/50">ARCHIVED</dt>
-        <dd>{{ article.created_at | fadate }}</dd>
+      <div class="spec-row">
+        <dt class="spec-key">ARCHIVED</dt>
+        <dd class="spec-val">{{ article.created_at | fadate }}</dd>
       </div>
-      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
-        <dt class="text-ink/50">VERIFIED</dt>
-        <dd class="{{ 'text-mint' if article.verified else 'text-signal' }}">
+      <div class="spec-row">
+        <dt class="spec-key">VERIFIED</dt>
+        <dd class="spec-val {{ 'v-true' if article.verified else 'v-pending' }}">
           {{ "TRUE" if article.verified else "PENDING" }}
         </dd>
       </div>
-      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
-        <dt class="text-ink/50">ARTICLE ID</dt>
-        <dd>#{{ article.id }}</dd>
+      <div class="spec-row">
+        <dt class="spec-key">ARTICLE ID</dt>
+        <dd class="spec-val">#{{ article.id }}</dd>
       </div>
-    </dl>
-  </footer>
+    </section>
 
-  <!-- اشتراک‌گذاری -->
-  <div class="mt-6 bg-white border border-ink/10 p-5 fade-up" style="animation-delay: 380ms">
-    <h4 class="font-display text-lg mb-3">🔗 اشتراک‌گذاری این مقاله</h4>
-    <div class="flex flex-wrap gap-2">
-      <button onclick="navigator.clipboard.writeText(window.location.href).then(() => alert('لینک کپی شد!'))"
-              class="bg-brand text-paper px-4 py-2 text-sm hover:bg-brand2 transition-colors">
-        📋 کپی لینک
-      </button>
-      <a href="https://twitter.com/intent/tweet?text={{ article.title_persian | urlencode }}&url={{ ('https://righnews.gerdoo.app/article/' + article.id|string) | urlencode }}"
-         target="_blank" rel="noopener"
-         class="bg-ink text-paper px-4 py-2 text-sm hover:bg-ink/80 transition-colors">
-        𝕏 توییتر
-      </a>
-      <a href="https://t.me/share/url?url={{ ('https://righnews.gerdoo.app/article/' + article.id|string) | urlencode }}&text={{ article.title_persian | urlencode }}"
-         target="_blank" rel="noopener"
-         class="bg-[#0088cc] text-paper px-4 py-2 text-sm hover:opacity-90 transition-opacity">
-        ✈️ تلگرام
-      </a>
-      <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ ('https://righnews.gerdoo.app/article/' + article.id|string) | urlencode }}"
-         target="_blank" rel="noopener"
-         class="bg-[#0a66c2] text-paper px-4 py-2 text-sm hover:opacity-90 transition-opacity">
-        💼 لینکدین
-      </a>
-    </div>
-  </div>
-
-  <!-- مقالات دیگر -->
-  {% if others %}
-  <section class="mt-12 fade-up" style="animation-delay: 420ms">
-    <h3 class="font-display text-2xl mb-5">📚 مقالات دیگر</h3>
-    <div class="divide-y divide-ink/5 bg-white border border-ink/10">
+    <!-- مقالات مرتبط -->
+    {% if others %}
+    <section class="related reveal" style="--d: 600ms">
+      <h2 class="sec-title">📚 مقالات دیگر</h2>
       {% for o in others %}
-      <a href="/article/{{ o.id }}" class="group flex items-center gap-4 px-6 py-4 hover:bg-paper transition-colors">
-        {% if o.image_url %}
-        <div class="w-14 h-14 shrink-0 image-wrapper bg-gray-100">
-          <img src="{{ o.image_url }}" alt="" class="w-full h-full object-cover" loading="lazy">
-        </div>
-        {% else %}
-        <div class="w-14 h-14 shrink-0 bg-gray-100 flex items-center justify-center text-ink/20 font-display">
-          #{{ o.id }}
-        </div>
-        {% endif %}
-        
-        <span class="flex-1 min-w-0">
-          <span class="block font-medium group-hover:text-brand transition-colors line-clamp-2">
-            {{ o.title_persian }}
-          </span>
-          <span class="block text-xs text-ink/40 mt-0.5">{{ o.published_at | fadate }}</span>
-        </span>
-        <span class="text-brand opacity-0 group-hover:opacity-100 transition-opacity shrink-0">←</span>
+      <a href="/article/{{ o.id }}" class="related-item">
+        <span class="related-num">{{ "%02d"|format(loop.index) | fanum }}</span>
+        <span class="related-title">{{ o.title_persian }}</span>
+        <span class="related-arr" aria-hidden="true">←</span>
       </a>
       {% endfor %}
-    </div>
-  </section>
-  {% endif %}
+    </section>
+    {% endif %}
 
+  </div>
 </article>
 
 {% endblock %}

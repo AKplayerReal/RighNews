@@ -6,297 +6,345 @@
 
 {% block content %}
 
+<a href="#main-content" class="skip-link">پرش به محتوای اصلی</a>
+
 <!-- ═══════════════════════════════════════════════════ -->
 <!-- 📡 سیم خبری متحرک                                 -->
 <!-- ═══════════════════════════════════════════════════ -->
 {% if articles %}
-<div class="bg-ink text-paper overflow-hidden border-b-2 border-accent">
-  <div class="flex items-center">
-    <div class="shrink-0 z-10 bg-accent text-ink font-display px-4 py-1.5 text-lg flex items-center gap-2">
-      <span class="w-2 h-2 rounded-full bg-ink live-dot"></span>
-      سیم خبری
-    </div>
-    <div class="overflow-hidden flex-1">
-      <div class="flex w-max animate-ticker gap-10 px-6 py-1.5 text-sm">
-        {% for i in range(2) %}
-          {% for a in articles %}
-          <a href="/article/{{ a.id }}" class="flex items-center gap-2 whitespace-nowrap hover:text-accent transition-colors">
-            <span class="font-mono text-accent text-xs">#{{ a.id }}</span>
-            {{ a.title_persian }}
-          </a>
-          {% endfor %}
+<div class="ticker" role="marquee" aria-label="آخرین اخبار">
+  <div class="ticker-label">
+    <span class="ticker-dot" aria-hidden="true"></span>
+    <span>سیم خبری</span>
+  </div>
+  <div class="ticker-viewport">
+    <div class="ticker-track">
+      {% for i in range(2) %}
+      <div class="ticker-group">
+        {% for a in articles %}
+        <a href="/article/{{ a.id }}" class="ticker-item">
+          <span class="mono" dir="ltr" aria-hidden="true">#{{ a.id }}</span>
+          <span>{{ a.title_persian }}</span>
+        </a>
+        <span class="ticker-sep" aria-hidden="true">◆</span>
         {% endfor %}
       </div>
+      {% endfor %}
     </div>
   </div>
 </div>
 {% endif %}
 
 <!-- ═══════════════════════════════════════════════════ -->
-<!-- 🗞️ سردر روزنامه                                    -->
+<!-- 🗞️ سردر روزنامه (Masthead)                        -->
 <!-- ═══════════════════════════════════════════════════ -->
-<header class="border-b-2 border-ink newsprint">
-  <div class="max-w-6xl mx-auto px-4 py-8 flex flex-wrap items-end justify-between gap-6">
-    <div>
-      <p class="font-mono text-[11px] tracking-widest text-brand mb-2" dir="ltr">AI NEWS AGENCY — EST. 1405</p>
-      <h1 class="font-display text-6xl md:text-7xl leading-none">
-        رای‌<span class="text-brand">نیوز</span><span class="text-accent">.</span>
-      </h1>
-      <p class="mt-3 text-sm text-ink/60 max-w-md leading-6">
-        ترجمه و راستی‌آزمایی مقالات علمی با هوش مصنوعی — از arXiv تا فارسی، در چند ثانیه
-      </p>
+<header class="masthead">
+  <div class="container">
+    <!-- نوار ابزار بالا -->
+    <div class="utility-bar">
+      <div class="u-item u-edition">
+        <span>شماره {{ articles|length | fanum }} — دوره اول</span>
+      </div>
+      <div class="u-item">
+        <span>{{ today }}</span>
+      </div>
+      <div class="u-item u-live">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span>پردازش زنده</span>
+        <span class="u-clock mono" id="live-clock" aria-live="polite">--:--:--</span>
+      </div>
     </div>
-    <div class="text-left space-y-1">
-      <p class="text-sm font-bold">{{ today }}</p>
-      <p class="font-mono text-[11px] text-ink/50" dir="ltr">righnews.gerdoo.app</p>
-      <p class="flex items-center gap-1.5 text-xs text-mint font-medium justify-end">
-        <span class="w-1.5 h-1.5 rounded-full bg-mint live-dot"></span>
-        پردازش زنده فعال
-      </p>
+
+    <!-- بخش اصلی سردر -->
+    <div class="masthead-main">
+      <!-- ستون چپ (راست در RTL) -->
+      <div class="mast-side mast-left">
+        <p class="mast-note"><b>هوش مصنوعی</b> در خدمت ترجمه</p>
+        <p class="mast-note mono">arXiv → Persian</p>
+      </div>
+
+      <!-- مرکز (لوگو) -->
+      <div class="mast-center">
+        <a href="/" class="logo" aria-label="صفحه اصلی رای‌نیوز">
+          <span class="logo-text">
+            رای‌<span style="color: var(--brand);">نیوز</span><span class="logo-dot" aria-hidden="true"></span>
+          </span>
+          <span class="logo-sub">AI NEWS AGENCY</span>
+        </a>
+        <p class="tagline">ترجمه و راستی‌آزمایی مقالات علمی — از arXiv تا فارسی</p>
+      </div>
+
+      <!-- ستون راست (چپ در RTL) -->
+      <div class="mast-side">
+        <p class="mast-note"><b>گردو کلود</b> ☁ میزبان ماست</p>
+        <p class="mast-note mono">righnews.gerdoo.app</p>
+      </div>
     </div>
+
+    <!-- نوار ناوبری -->
+    <nav class="nav-strip" aria-label="ناوبری اصلی">
+      <div class="nav-inner">
+        <a href="#archive">📚 آرشیو</a>
+        <a href="/admin">🔐 پنل مدیریت</a>
+        <a href="/docs">📖 API</a>
+        <a href="#footer">ℹ️ درباره ما</a>
+      </div>
+    </nav>
   </div>
 </header>
 
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- 📰 سرمقاله + تازه‌ترین‌ها                          -->
-<!-- ═══════════════════════════════════════════════════ -->
-{% if not q and lead %}
-<section class="max-w-6xl mx-auto px-4 py-10 grid lg:grid-cols-12 gap-8">
+<main id="main-content">
+  <div class="container">
 
-  <!-- مقاله اصلی (پنل تیره با تصویر پس‌زمینه) -->
-  <div class="lg:col-span-7 fade-up">
-    <a href="/article/{{ lead.id }}" class="group block bg-ink text-paper h-full relative overflow-hidden">
-      
-      <!-- تصویر پس‌زمینه -->
-      {% if lead.image_url %}
-      <div class="absolute inset-0 image-wrapper">
-        <img src="{{ lead.image_url }}" alt="" 
-             class="w-full h-full object-cover opacity-30 group-hover:opacity-50"
-             loading="lazy">
-        <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/40"></div>
-      </div>
-      {% endif %}
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- 📰 سرمقاله + تازه‌ترین‌ها                          -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    {% if not q and lead %}
+    <section class="top-grid reveal" style="--d: 100ms">
 
-      <!-- نوار کهربایی بالا -->
-      <span class="absolute top-0 right-0 w-full h-1.5 bg-accent z-10"></span>
-
-      <!-- علامت‌های چاپ -->
-      <span class="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-paper/20 group-hover:border-accent transition-colors z-10"></span>
-      <span class="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-paper/20 group-hover:border-accent transition-colors z-10"></span>
-
-      <div class="relative z-10 p-8 md:p-12 flex flex-col h-full min-h-[360px]">
-        <div class="flex items-center gap-3 text-xs mb-7">
-          <span class="bg-accent text-ink font-bold px-2.5 py-1">سرمقاله</span>
-          <span class="font-mono text-paper/50" dir="ltr">{{ lead.source_type }}</span>
-          <span class="font-mono text-paper/30 ms-auto" dir="ltr">#{{ lead.id }}</span>
-        </div>
-
-        <h2 class="font-display text-4xl md:text-[3.4rem] leading-[1.1] mb-4 group-hover:text-accent transition-colors duration-300 drop-shadow-lg">
-          {{ lead.title_persian }}
-        </h2>
-
-        <p class="font-mono text-sm text-paper/60 mb-7" dir="ltr">{{ lead.title_english }}</p>
-
-        <p class="text-paper/80 leading-8 line-clamp-3 flex-1">
-          {{ lead.content_persian[:250] }}…
-        </p>
-
-        <div class="flex items-center justify-between mt-9 pt-6 border-t border-paper/10">
-          <span class="text-xs text-paper/60">{{ lead.published_at | fadate }}</span>
-          <span class="flex items-center gap-2 text-accent font-bold">
-            مطالعه کامل
-            <span class="transition-transform duration-300 group-hover:-translate-x-2">←</span>
-          </span>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  <!-- ستون تازه‌ترین‌ها + آمار -->
-  <div class="lg:col-span-5 fade-up" style="animation-delay: 150ms">
-    <div class="bg-white border border-ink/10 h-full flex flex-col">
-      <div class="px-6 pt-6 pb-3 flex items-center justify-between border-b border-ink/10">
-        <h3 class="font-display text-2xl">تازه‌ترین‌ها</h3>
-        <span class="text-brand">🕐</span>
-      </div>
-
-      <div class="flex-1 divide-y divide-ink/5">
-        {% for a in latest %}
-        <a href="/article/{{ a.id }}" class="group flex items-center gap-4 px-6 py-4 hover:bg-paper transition-colors">
-          {% if a.image_url %}
-          <div class="w-16 h-16 shrink-0 image-wrapper bg-gray-100">
-            <img src="{{ a.image_url }}" alt="" class="w-full h-full object-cover" loading="lazy">
-          </div>
-          {% else %}
-          <div class="w-16 h-16 shrink-0 bg-gray-100 flex items-center justify-center text-ink/20 font-display text-xl">
-            {{ "%02d"|format(loop.index) }}
-          </div>
-          {% endif %}
-          
-          <span class="flex-1 min-w-0">
-            <span class="block font-medium leading-6 group-hover:text-brand transition-colors line-clamp-2">
-              {{ a.title_persian }}
-            </span>
-            <span class="block text-xs text-ink/40 mt-0.5">{{ a.published_at | fadate }}</span>
-          </span>
-        </a>
-        {% endfor %}
-        
-        {% if not latest %}
-        <p class="px-6 py-8 text-sm text-ink/40">هنوز مقاله دیگری پردازش نشده.</p>
+      <!-- مقاله اصلی (Lead) -->
+      <a href="/article/{{ lead.id }}" class="lead">
+        {% if lead.image_url %}
+        <img src="{{ lead.image_url }}" alt="" class="lead-img" data-fallback loading="eager">
         {% endif %}
-      </div>
-
-      <!-- نوار آمار زنده -->
-      <div class="bg-brand2 text-paper px-6 py-4 grid grid-cols-3 gap-2 text-center">
-        <div>
-          <p class="font-display text-2xl text-accent">{{ articles|length | fanum }}</p>
-          <p class="text-[11px] text-paper/60">مقاله پردازش‌شده</p>
-        </div>
-        <div>
-          <p class="font-display text-2xl text-accent">{{ verified_count | fanum }}</p>
-          <p class="text-[11px] text-paper/60">راستی‌آزمایی‌شده</p>
-        </div>
-        <div>
-          <p class="font-display text-2xl text-accent">۱۰۰٪</p>
-          <p class="text-[11px] text-paper/60">دقت اعداد</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- ⚙️ نوار موتور پردازش                              -->
-<!-- ═══════════════════════════════════════════════════ -->
-<section class="border-y-2 border-ink bg-white">
-  <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
-    <span class="flex items-center gap-2 font-medium">
-      ⚙️ موتور ترجمه:
-      <span class="font-mono text-xs bg-paper border border-ink/10 px-2 py-0.5" dir="ltr">deepseek-v4-flash</span>
-    </span>
-    <span class="flex items-center gap-2 font-medium">
-      🛡️ راستی‌آزمایی خودکار اعداد و مشخصات فنی
-    </span>
-    <span class="flex items-center gap-2 font-medium">
-      📡 منبع:
-      <span class="font-mono text-xs bg-paper border border-ink/10 px-2 py-0.5" dir="ltr">arXiv.org</span>
-    </span>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- 🔍 آرشیو با جستجو                                  -->
-<!-- ═══════════════════════════════════════════════════ -->
-<main class="max-w-6xl mx-auto px-4 py-12">
-  <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-    <h2 class="font-display text-3xl">
-      {% if q %}نتایج جستجو{% else %}آرشیو مقالات{% endif %}
-    </h2>
-    <form action="/" method="get" class="relative w-full sm:w-80">
-      <input name="q" value="{{ q }}" placeholder="جستجو در ترجمه‌ها…"
-        class="w-full bg-white border border-ink/15 pr-4 pl-10 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all">
-      <button type="submit" class="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-brand transition-colors" aria-label="جستجو">
-        🔍
-      </button>
-      {% if q %}
-      <a href="/" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-signal hover:underline">✕ پاک کردن</a>
-      {% endif %}
-    </form>
-  </div>
-
-  <p class="text-sm text-ink/50 mb-6 font-mono">
-    {{ grid|length | fanum }} مقاله{% if q %} — برای «{{ q }}»{% endif %}
-  </p>
-
-  {% if grid %}
-  <div class="grid md:grid-cols-2 gap-6">
-    {% for a in grid %}
-    <a href="/article/{{ a.id }}"
-       class="group block bg-white border border-ink/10 relative overflow-hidden hover:border-brand/40 transition-colors duration-300 fade-up"
-       style="animation-delay: {{ loop.index0 * 80 }}ms">
-
-      <!-- تصویر مقاله -->
-      {% if a.image_url %}
-      <div class="h-48 image-wrapper relative">
-        <img src="{{ a.image_url }}" alt="{{ a.title_persian }}" 
-             class="w-full h-full object-cover"
-             loading="lazy">
-        <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
-      </div>
-      {% endif %}
-
-      <!-- نوار کهربایی بالا -->
-      <span class="absolute {% if a.image_url %}top-48{% else %}top-0{% endif %} right-0 h-1 w-10 bg-accent transition-all duration-500 group-hover:w-full z-10"></span>
-
-      <div class="p-6">
-        <!-- بج‌ها -->
-        <div class="flex items-center gap-3 mb-3 text-xs">
-          <span class="font-mono bg-ink text-paper px-2 py-0.5">{{ a.source_type }}</span>
-          {% if a.verified %}
-          <span class="flex items-center gap-1 text-mint font-medium">
-            ✓ راستی‌آزمایی شد
+        <div class="lead-overlay" aria-hidden="true"></div>
+        <div class="lead-content">
+          <div class="lead-kicker">
+            <span>سرمقاله</span>
+            <span class="lead-date mono">{{ lead.published_at | fadate }}</span>
+          </div>
+          <h2 class="lead-title">{{ lead.title_persian }}</h2>
+          <p class="lead-en" dir="ltr">{{ lead.title_english }}</p>
+          <p class="lead-excerpt">{{ lead.content_persian[:280] }}…</p>
+          <span class="btn-lead">
+            <span>مطالعه کامل</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
           </span>
-          {% else %}
-          <span class="flex items-center gap-1 text-signal font-medium">
-            ⚠ در حال بررسی
-          </span>
+        </div>
+      </a>
+
+      <!-- ستون تازه‌ترین‌ها + آمار -->
+      <aside class="latest">
+        <div class="latest-head">
+          <h3 class="latest-title">تازه‌ترین‌ها</h3>
+          <span class="latest-meta mono">{{ latest|length | fanum }} مورد</span>
+        </div>
+
+        <ul class="latest-list">
+          {% for a in latest %}
+          <li class="latest-item">
+            <a href="/article/{{ a.id }}" style="display: flex; align-items: center; gap: 0.9rem; width: 100%;">
+              <span class="latest-num">{{ "%02d"|format(loop.index) | fanum }}</span>
+              <div class="latest-body">
+                <span class="latest-item-title">{{ a.title_persian }}</span>
+                <span class="latest-item-meta">{{ a.published_at | fadate }}</span>
+              </div>
+              <span class="latest-arr" aria-hidden="true">←</span>
+            </a>
+          </li>
+          {% endfor %}
+          {% if not latest %}
+          <li class="latest-empty">هنوز مقاله دیگری پردازش نشده.</li>
           {% endif %}
-          <span class="font-mono text-ink/30 ms-auto" dir="ltr">#{{ a.id }}</span>
+        </ul>
+
+        <!-- آمار زنده -->
+        <div class="stats">
+          <div class="stat">
+            <b class="counter" data-count="{{ articles|length }}">۰</b>
+            <span>مقاله</span>
+          </div>
+          <div class="stat">
+            <b class="counter" data-count="{{ verified_count }}">۰</b>
+            <span>راستی‌آزمایی</span>
+          </div>
+          <div class="stat">
+            <b>۱۰۰٪</b>
+            <span>دقت اعداد</span>
+          </div>
         </div>
+      </aside>
+    </section>
+    {% endif %}
 
-        <!-- عناوین -->
-        <h3 class="font-display text-2xl leading-snug mb-2 group-hover:text-brand transition-colors">
-          {{ a.title_persian }}
-        </h3>
-        <p class="text-sm text-ink/60 font-mono mb-4 truncate" dir="ltr">
-          {{ a.title_english }}
-        </p>
-
-        <!-- خلاصه -->
-        <p class="text-ink/75 leading-7 mb-5 line-clamp-2">
-          {{ a.content_persian[:160] }}…
-        </p>
-
-        <!-- فوتر کارت -->
-        <div class="flex items-center justify-between text-sm pt-4 border-t border-ink/5">
-          <span class="text-ink/50">{{ a.published_at | fadate }}</span>
-          <span class="flex items-center gap-1 text-brand font-medium">
-            مطالعه
-            <span class="transition-transform duration-300 group-hover:-translate-x-1.5">←</span>
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- ⚙️ نوار موتور پردازش                              -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="engine reveal" style="--d: 200ms" aria-label="وضعیت موتور پردازش">
+      <div class="container">
+        <div class="engine-inner">
+          <span class="engine-item">
+            ⚙️ موتور ترجمه:
+            <b class="mono" dir="ltr">deepseek-v4-flash</b>
+          </span>
+          <span class="engine-sep" aria-hidden="true">◆</span>
+          <span class="engine-item">
+            🛡️ راستی‌آزمایی:
+            <b class="engine-ok">فعال</b>
+          </span>
+          <span class="engine-sep" aria-hidden="true">◆</span>
+          <span class="engine-item">
+            📡 منبع:
+            <b class="mono" dir="ltr">arXiv.org</b>
+          </span>
+          <span class="engine-sep" aria-hidden="true">◆</span>
+          <span class="engine-item">
+            🗄️ دیتابیس:
+            <b class="engine-ok">PostgreSQL</b>
           </span>
         </div>
       </div>
-    </a>
-    {% endfor %}
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- 🔍 آرشیو با جستجو                                  -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="archive reveal" id="archive" style="--d: 300ms">
+      <div class="archive-head">
+        <h2 class="sec-title">
+          {% if q %}نتایج جستجو{% else %}آرشیو مقالات{% endif %}
+        </h2>
+        <div class="archive-tools">
+          <span class="archive-count" id="archive-count">
+            نمایش {{ grid|length | fanum }} از {{ articles|length | fanum }} پرونده
+          </span>
+          <div class="search-wrap">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              type="search"
+              id="archive-search"
+              placeholder="جستجو در عنوان و محتوا… (کلید /)"
+              value="{{ q }}"
+              autocomplete="off"
+              aria-label="جستجو در مقالات"
+            >
+          </div>
+          {% if q %}
+          <button type="button" id="archive-reset" class="link-btn">
+            ✕ پاک کردن جستجو
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if grid %}
+      <div class="grid" id="archive-grid">
+        {% for a in grid %}
+        <article
+          class="card reveal"
+          style="--d: {{ 400 + loop.index0 * 80 }}ms"
+          data-search="{{ a.title_persian }} {{ a.title_english }} {{ a.content_persian }} {{ a.content_english }}"
+        >
+          <!-- تصویر -->
+          {% if a.image_url %}
+          <a href="/article/{{ a.id }}" class="card-media">
+            <img src="{{ a.image_url }}" alt="{{ a.title_persian }}" loading="lazy" data-fallback>
+          </a>
+          {% endif %}
+
+          <div class="card-body">
+            <!-- بج‌ها -->
+            <div class="badges">
+              <span class="badge badge-src">{{ a.source_type }}</span>
+              {% if a.verified %}
+              <span class="badge badge-ok">✓ راستی‌آزمایی شد</span>
+              {% else %}
+              <span class="badge badge-warn">⚠ در حال بررسی</span>
+              {% endif %}
+              <span class="badge badge-src" dir="ltr">#{{ a.id }}</span>
+            </div>
+
+            <!-- عنوان فارسی -->
+            <h3 class="card-title">
+              <a href="/article/{{ a.id }}">{{ a.title_persian }}</a>
+            </h3>
+
+            <!-- عنوان انگلیسی -->
+            <p class="card-en" dir="ltr">{{ a.title_english }}</p>
+
+            <!-- خلاصه -->
+            <p class="card-excerpt">{{ a.content_persian[:160] }}…</p>
+
+            <!-- فوتر کارت -->
+            <div class="card-foot">
+              <time datetime="{{ a.published_at }}">{{ a.published_at | fadate }}</time>
+              <a href="/article/{{ a.id }}" class="card-cta">
+                <span>مطالعه</span>
+                <span class="arr" aria-hidden="true">←</span>
+              </a>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty" id="archive-empty">
+        <h3 class="empty-title">چیزی پیدا نشد</h3>
+        <p class="empty-sub">
+          {% if q %}
+          عبارت دیگری را امتحان کنید.
+          {% else %}
+          هنوز مقاله‌ای پردازش نشده است.
+          {% endif %}
+        </p>
+      </div>
+      {% endif %}
+    </section>
+
   </div>
-  {% else %}
-  <div class="text-center py-20 border border-dashed border-ink/20">
-    <p class="font-display text-3xl text-ink/30">چیزی پیدا نشد</p>
-    <p class="text-ink/50 text-sm mt-3">
-      {% if q %}عبارت دیگری را امتحان کنید.{% else %}هنوز مقاله‌ای پردازش نشده است.{% endif %}
-    </p>
-    {% if q %}
-    <a href="/" class="inline-block mt-4 bg-brand text-paper px-6 py-2 font-medium hover:bg-brand2 transition-colors">
-      پاک کردن جستجو
-    </a>
-    {% endif %}
-  </div>
-  {% endif %}
 </main>
 
 <!-- ═══════════════════════════════════════════════════ -->
 <!-- 📎 پانوشت                                          -->
 <!-- ═══════════════════════════════════════════════════ -->
-<footer class="bg-ink text-paper/70 mt-8">
-  <div class="max-w-6xl mx-auto px-4 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
-    <p class="font-display text-3xl text-paper">
-      رای‌<span class="text-accent">نیوز</span>
-    </p>
-    <p class="text-xs font-mono" dir="ltr">
-      FastAPI · DeepSeek · PostgreSQL — on Gerdoo ☁
-    </p>
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <!-- ستون ۱: درباره -->
+      <div>
+        <p class="footer-logo">رای‌<span style="color: var(--accent);">نیوز</span></p>
+        <p class="footer-about">
+          آژانس خبری هوش مصنوعی — ترجمه و راستی‌آزمایی خودکار مقالات علمی
+          از arXiv به فارسی. همه‌چیز با FastAPI و DeepSeek V4 Flash.
+        </p>
+      </div>
+
+      <!-- ستون ۲: لینک‌ها -->
+      <div>
+        <h4 class="footer-head">لینک‌های سریع</h4>
+        <nav class="footer-links">
+          <a href="#archive">📚 آرشیو مقالات</a>
+          <a href="/admin">🔐 پنل مدیریت</a>
+          <a href="/docs">📖 مستندات API</a>
+          <a href="/health">🏥 وضعیت سرور</a>
+        </nav>
+      </div>
+
+      <!-- ستون ۳: تکنولوژی -->
+      <div>
+        <h4 class="footer-head">ساخته شده با</h4>
+        <p class="tech-line">
+          ⚡ FastAPI (Backend)<br>
+          🧠 DeepSeek V4 Flash<br>
+          🗄️ PostgreSQL + Jinja2<br>
+          ☁️ Gerdoo Cloud Platform
+        </p>
+        <div class="tech-status">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span>همه سیستم‌ها فعال</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© {{ today }} — رای‌نیوز</span>
+      <span class="mono" dir="ltr">v1.0 · Made with ❤️ in Iran</span>
+    </div>
   </div>
 </footer>
 

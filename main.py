@@ -212,6 +212,7 @@ def home(request: Request, q: str = "", db: Session = Depends(get_db)):
             "q": q,
             "verified_count": sum(1 for a in articles if a.verified),
             "today": today,
+            "articles_for_404": articles[:3],  # ← این خط اضافه شد
         },
     )
 
