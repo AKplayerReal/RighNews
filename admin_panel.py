@@ -75,12 +75,11 @@ def require_auth(request: Request):
 # ============================================
 @admin_router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    """صفحه ورود"""
     return admin_templates.TemplateResponse(
+        request,
         "login.html",
-        {"request": request, "error": None}
+        {"error": None}
     )
-
 @admin_router.post("/login")
 async def login_submit(
     request: Request,
@@ -93,8 +92,9 @@ async def login_submit(
     
     if username != admin_user or password != admin_pass:
         return admin_templates.TemplateResponse(
+            request,
             "login.html",
-            {"request": request, "error": "نام کاربری یا رمز عبور اشتباه است"}
+            {"error": "نام کاربری یا رمز عبور اشتباه است"}
         )
     
     # ایجاد session
@@ -145,16 +145,15 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
     recent_articles = db.query(Article).order_by(Article.created_at.desc()).limit(5).all()
     
     return admin_templates.TemplateResponse(
+        request,
         "dashboard.html",
         {
-            "request": request,
             "user": user,
             "total_articles": total_articles,
             "verified_articles": verified_articles,
             "recent_articles": recent_articles
         }
     )
-
 # ============================================
 # لیست مقالات
 # ============================================
@@ -187,9 +186,9 @@ async def list_articles(
     articles = query.order_by(Article.created_at.desc()).all()
     
     return admin_templates.TemplateResponse(
+        request,
         "articles_list.html",
         {
-            "request": request,
             "user": user,
             "articles": articles,
             "q": q,
@@ -205,9 +204,11 @@ async def new_article_page(request: Request):
     """فرم افزودن مقاله"""
     user = get_current_user_or_redirect(request)
     if not user:
-        return RedirectResponse(url="/admin/login", status_code=303)
-        "article_form.html",
-        {"request": request, "user": user, "article": None}
+        return admin_templates.TemplateResponse(
+            request,
+            "article_form.html",
+            {"user": user, "article": None}
+        )
     
 
 @admin_router.post("/articles/new")
@@ -264,8 +265,9 @@ async def edit_article_page(request: Request, article_id: int, db: Session = Dep
         raise HTTPException(status_code=404, detail="Article not found")
     
     return admin_templates.TemplateResponse(
+        request,
         "article_form.html",
-        {"request": request, "user": user, "article": article}
+        {"user": user, "article": article}
     )
 
 @admin_router.post("/articles/{article_id}")
