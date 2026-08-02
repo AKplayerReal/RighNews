@@ -199,14 +199,20 @@ def setup_admin(app):
     """نصب پنل ادمین روی اپلیکیشن"""
     from starlette.middleware.sessions import SessionMiddleware
 
-    # اضافه کردن SessionMiddleware برای احراز هویت
+    # SessionMiddleware با تنظیمات صحیح برای HTTPS (گردو)
     app.add_middleware(
         SessionMiddleware,
-        secret_key=os.getenv("SESSION_SECRET", "righnews-session-secret-change-in-prod"),
+        secret_key=os.getenv("SESSION_SECRET", "righnews-session-secret-must-be-at-least-32-chars-long-2026"),
+        https_only=True,           # ← مهم: برای HTTPS گردو
+        same_site="lax",           # ← جلوگیری از مشکلات cookie
+        max_age=60 * 60 * 24 * 7,  # ← ۷ روز اعتبار session
     )
 
-    # ایجاد Admin
-    authentication_backend = AdminAuth(secret_key="righnews-admin-secret")
+    # AdminAuth با secret key قوی
+    authentication_backend = AdminAuth(
+        secret_key=os.getenv("SESSION_SECRET", "righnews-session-secret-must-be-at-least-32-chars-long-2026")
+    )
+    
     admin = Admin(
         app,
         engine,
@@ -216,7 +222,6 @@ def setup_admin(app):
         base_url="/admin",
     )
 
-    # ثبت ModelView ها
     admin.add_view(ArticleAdmin)
     admin.add_view(ArticleEmbeddingAdmin)
 
