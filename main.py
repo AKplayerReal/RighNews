@@ -11,7 +11,6 @@ from fastapi.responses import HTMLResponse
 import jdatetime
 import re
 from fastapi.staticfiles import StaticFiles
-from admin import setup_admin
 from admin_panel import admin_router
 # ============================================
 # راه‌اندازی اولیه FastAPI
@@ -27,9 +26,7 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(admin_router)
 # ============================================
-# پنل ادمین (در مسیر /admin)
-# ============================================
-setup_admin(app)
+
 # ============================================
 # قالب‌های HTML (سایت رای‌نیوز)
 # ============================================
