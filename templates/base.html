@@ -6,19 +6,31 @@
   <title>{% block title %}رای‌نیوز | آژانس خبری هوش مصنوعی{% endblock %}</title>
   <meta name="description" content="{% block description %}ترجمه و راستی‌آزمایی خودکار مقالات علمی هوش مصنوعی به فارسی{% endblock %}">
 
-  <!-- فونت‌ها: لاله‌زار (تیتر) + وزیرمتن (متن) + مونو (فنی) -->
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{% block og_title %}رای‌نیوز{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}ترجمه و راستی‌آزمایی خودکار مقالات علمی هوش مصنوعی{% endblock %}">
+  {% block og_image %}{% endblock %}
+
+  <!-- فونت‌ها -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            ink: "#101a24", paper: "#f2f5f4", brand: "#0d5c52",
-            brand2: "#0a4740", accent: "#ffb020", signal: "#e5484d", mint: "#129d74"
+            ink: "#101a24",
+            paper: "#f2f5f4",
+            brand: "#0d5c52",
+            brand2: "#0a4740",
+            accent: "#ffb020",
+            signal: "#e5484d",
+            mint: "#129d74"
           },
           fontFamily: {
             display: ["Lalezar", "Vazirmatn", "sans-serif"],
@@ -31,20 +43,102 @@
   </script>
 
   <style>
+    /* انیمیشن‌ها */
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(50%); } }
     @keyframes blink  { 0%,100% { opacity:1; } 50% { opacity:.25; } }
     @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
 
     .animate-ticker { animation: ticker 60s linear infinite; }
     .animate-ticker:hover { animation-play-state: paused; }
     .live-dot { animation: blink 1.6s ease-in-out infinite; }
     .fade-up { animation: fadeUp .7s ease-out both; }
-    .newsprint { background-image: radial-gradient(rgba(16,26,36,.06) 1px, transparent 1px); background-size: 20px 20px; }
+
+    /* بافت کاغذ روزنامه */
+    .newsprint {
+      background-image: radial-gradient(rgba(16,26,36,.06) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* انتخاب متن */
     ::selection { background:#ffb020; color:#101a24; }
+
+    /* فونت پیش‌فرض بدنه */
     body { font-family: "Vazirmatn", system-ui, sans-serif; }
+
+    /* اسکرول بار */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #f2f5f4; }
+    ::-webkit-scrollbar-thumb { background: #0d5c52; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: #0a4740; }
+
+    /* Skeleton loader برای تصاویر */
+    .skeleton {
+      background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    /* خط‌چین برای متن‌های طولانی */
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* فید تصاویر */
+    .image-wrapper {
+      position: relative;
+      overflow: hidden;
+      background: #e5e7eb;
+    }
+    .image-wrapper img {
+      transition: transform .5s ease, opacity .5s ease;
+    }
+    .image-wrapper img.loaded {
+      opacity: 1;
+    }
+    .image-wrapper img:not(.loaded) {
+      opacity: 0;
+    }
+    .group:hover .image-wrapper img {
+      transform: scale(1.05);
+    }
   </style>
+
+  {% block head_extra %}{% endblock %}
 </head>
 <body class="bg-paper text-ink antialiased">
   {% block content %}{% endblock %}
+
+  <!-- اسکریپت بارگذاری lazy تصاویر -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // lazy load تصاویر
+      const images = document.querySelectorAll('img[loading="lazy"]');
+      images.forEach(img => {
+        if (img.complete) {
+          img.classList.add('loaded');
+        } else {
+          img.addEventListener('load', () => img.classList.add('loaded'));
+          img.addEventListener('error', () => {
+            img.style.display = 'none';
+          });
+        }
+      });
+    });
+  </script>
+
+  {% block scripts %}{% endblock %}
 </body>
 </html>

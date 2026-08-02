@@ -1,18 +1,63 @@
 {% extends "base.html" %}
+
 {% block title %}{{ article.title_persian }} | رای‌نیوز{% endblock %}
 {% block description %}{{ article.content_persian[:150] }}{% endblock %}
+
+{% block og_title %}{{ article.title_persian }}{% endblock %}
+{% block og_description %}{{ article.content_persian[:150] }}{% endblock %}
+{% block og_image %}
+{% if article.image_url %}
+<meta property="og:image" content="{{ article.image_url }}">
+{% endif %}
+{% endblock %}
+
+{% block head_extra %}
+<link rel="canonical" href="https://righnews.gerdoo.app/article/{{ article.id }}">
+
+<!-- Structured Data برای سئو -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ article.title_persian }}",
+  "description": "{{ article.content_persian[:200] | replace('"', '\\"') }}",
+  {% if article.image_url %}
+  "image": "{{ article.image_url }}",
+  {% endif %}
+  "datePublished": "{{ article.published_at }}",
+  "dateModified": "{{ article.created_at }}",
+  "inLanguage": "fa",
+  "publisher": {
+    "@type": "Organization",
+    "name": "رای‌نیوز"
+  }
+}
+</script>
+{% endblock %}
+
 {% block content %}
 
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 🧭 نوار بالا                                       -->
+<!-- ═══════════════════════════════════════════════════ -->
 <div class="bg-ink text-paper">
   <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
     <a href="/" class="flex items-center gap-2 hover:text-accent transition-colors text-sm">
-      → بازگشت به صفحه اصلی
+      <span class="transition-transform duration-300 hover:-translate-x-1">→</span>
+      بازگشت به صفحه اصلی
     </a>
-    <span class="font-display text-xl">رای‌<span class="text-accent">نیوز</span></span>
+    <a href="/" class="font-display text-xl">
+      رای‌<span class="text-accent">نیوز</span>
+    </a>
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 📰 محتوای مقاله                                    -->
+<!-- ═══════════════════════════════════════════════════ -->
 <article class="max-w-5xl mx-auto px-4 py-12">
+
+  <!-- متادیتا -->
   <header class="mb-10 fade-up">
     <div class="flex flex-wrap items-center gap-3 text-xs mb-5">
       <span class="font-mono bg-ink text-paper px-2 py-1" dir="ltr">{{ article.source_type }}</span>
@@ -22,66 +67,158 @@
       <span class="bg-signal/10 text-signal px-3 py-1 font-semibold">⚠ نیاز به بازبینی</span>
       {% endif %}
       <span class="text-ink/50">{{ article.published_at | fadate }}</span>
+      <span class="font-mono text-ink/30 ms-auto" dir="ltr">#{{ article.id }}</span>
     </div>
-    <h1 class="font-display text-4xl md:text-6xl leading-[1.15] mb-4">{{ article.title_persian }}</h1>
-    <p class="font-mono text-ink/50 text-sm md:text-base" dir="ltr">{{ article.title_english }}</p>
+
+    <h1 class="font-display text-4xl md:text-6xl leading-[1.15] mb-4">
+      {{ article.title_persian }}
+    </h1>
+    <p class="font-mono text-ink/50 text-sm md:text-base" dir="ltr">
+      {{ article.title_english }}
+    </p>
   </header>
 
-  <div class="border-s-4 border-brand bg-brand/5 p-5 mb-10 flex gap-3 fade-up" style="animation-delay:120ms">
-    <span class="text-2xl">🛡️</span>
-    <div>
+  <!-- تصویر اصلی مقاله -->
+  {% if article.image_url %}
+  <figure class="mb-10 relative overflow-hidden fade-up" style="animation-delay: 60ms">
+    <div class="image-wrapper">
+      <img src="{{ article.image_url }}" alt="{{ article.title_persian }}" 
+           class="w-full h-64 md:h-96 object-cover"
+           loading="eager">
+    </div>
+    <figcaption class="absolute bottom-0 right-0 bg-ink/80 text-paper/70 text-xs font-mono px-3 py-1.5" dir="ltr">
+      {{ article.source_type.upper() }} · #{{ article.id }}
+    </figcaption>
+  </figure>
+  {% endif %}
+
+  <!-- گزارش راستی‌آزمایی -->
+  <div class="border-s-4 border-brand bg-brand/5 p-5 mb-10 flex gap-3 fade-up" style="animation-delay: 120ms">
+    <span class="text-2xl shrink-0">🛡️</span>
+    <div class="flex-1">
       <h2 class="font-bold mb-1">گزارش راستی‌آزمایی</h2>
       <p class="text-sm leading-7 text-ink/75">{{ article.fact_check_notes }}</p>
     </div>
   </div>
 
+  <!-- محتوای دوزبانه -->
   <div class="grid lg:grid-cols-2 gap-8 items-start">
-    <section class="bg-white border border-ink/10 p-7 fade-up" style="animation-delay:200ms">
-      <h2 class="font-display text-2xl text-brand mb-5">ترجمه فارسی</h2>
-      <p class="leading-9 text-lg text-ink/85">{{ article.content_persian }}</p>
+    
+    <!-- ستون ترجمه فارسی -->
+    <section class="bg-white border border-ink/10 p-7 fade-up" style="animation-delay: 200ms">
+      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-ink/10">
+        <span class="text-3xl">🇮🇷</span>
+        <h2 class="font-display text-2xl text-brand">ترجمه فارسی</h2>
+      </div>
+      <p class="leading-9 text-lg text-ink/85 whitespace-pre-wrap">{{ article.content_persian }}</p>
     </section>
-    <section class="bg-ink text-paper p-7 lg:sticky lg:top-6 fade-up" style="animation-delay:280ms" dir="ltr">
-      <h2 class="font-mono text-sm text-accent mb-5">ORIGINAL ABSTRACT</h2>
+
+    <!-- ستون متن اصلی (sticky) -->
+    <section class="bg-ink text-paper p-7 lg:sticky lg:top-6 fade-up" style="animation-delay: 280ms" dir="ltr">
+      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-paper/10">
+        <span class="text-3xl">🇬🇧</span>
+        <h2 class="font-mono text-sm text-accent">ORIGINAL ABSTRACT</h2>
+      </div>
       <p class="leading-8 text-paper/80 text-[15px]">{{ article.content_english }}</p>
     </section>
   </div>
 
-  <footer class="mt-10 bg-white border border-ink/10 p-6 fade-up" style="animation-delay:340ms">
-    <h3 class="font-display text-xl mb-4">شناسنامه مقاله</h3>
+  <!-- شناسنامه مقاله -->
+  <footer class="mt-10 bg-white border border-ink/10 p-6 fade-up" style="animation-delay: 340ms">
+    <h3 class="font-display text-xl mb-4">🗂️ شناسنامه مقاله</h3>
     <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm font-mono" dir="ltr">
       {% if article.source_url %}
       <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
         <dt class="text-ink/50">SOURCE</dt>
-        <dd><a href="{{ article.source_url }}" target="_blank" class="text-brand hover:text-accent transition-colors">arxiv.org ↗</a></dd>
+        <dd>
+          <a href="{{ article.source_url }}" target="_blank" rel="noopener noreferrer"
+             class="text-brand hover:text-accent flex items-center gap-1">
+            arxiv.org <span class="text-xs">↗</span>
+          </a>
+        </dd>
       </div>
       {% endif %}
       <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
-        <dt class="text-ink/50">TRANSLATOR</dt><dd>deepseek-v4-flash</dd>
+        <dt class="text-ink/50">TRANSLATOR</dt>
+        <dd>deepseek-v4-flash</dd>
       </div>
       <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
-        <dt class="text-ink/50">PUBLISHED</dt><dd>{{ article.published_at | fadate }}</dd>
+        <dt class="text-ink/50">PUBLISHED</dt>
+        <dd>{{ article.published_at | fadate }}</dd>
+      </div>
+      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
+        <dt class="text-ink/50">ARCHIVED</dt>
+        <dd>{{ article.created_at | fadate }}</dd>
       </div>
       <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
         <dt class="text-ink/50">VERIFIED</dt>
-        <dd class="{{ 'text-mint' if article.verified else 'text-signal' }}">{{ "TRUE" if article.verified else "PENDING" }}</dd>
+        <dd class="{{ 'text-mint' if article.verified else 'text-signal' }}">
+          {{ "TRUE" if article.verified else "PENDING" }}
+        </dd>
+      </div>
+      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
+        <dt class="text-ink/50">ARTICLE ID</dt>
+        <dd>#{{ article.id }}</dd>
       </div>
     </dl>
   </footer>
 
+  <!-- اشتراک‌گذاری -->
+  <div class="mt-6 bg-white border border-ink/10 p-5 fade-up" style="animation-delay: 380ms">
+    <h4 class="font-display text-lg mb-3">🔗 اشتراک‌گذاری این مقاله</h4>
+    <div class="flex flex-wrap gap-2">
+      <button onclick="navigator.clipboard.writeText(window.location.href).then(() => alert('لینک کپی شد!'))"
+              class="bg-brand text-paper px-4 py-2 text-sm hover:bg-brand2 transition-colors">
+        📋 کپی لینک
+      </button>
+      <a href="https://twitter.com/intent/tweet?text={{ article.title_persian | urlencode }}&url={{ ('https://righnews.gerdoo.app/article/' + article.id|string) | urlencode }}"
+         target="_blank" rel="noopener"
+         class="bg-ink text-paper px-4 py-2 text-sm hover:bg-ink/80 transition-colors">
+        𝕏 توییتر
+      </a>
+      <a href="https://t.me/share/url?url={{ ('https://righnews.gerdoo.app/article/' + article.id|string) | urlencode }}&text={{ article.title_persian | urlencode }}"
+         target="_blank" rel="noopener"
+         class="bg-[#0088cc] text-paper px-4 py-2 text-sm hover:opacity-90 transition-opacity">
+        ✈️ تلگرام
+      </a>
+      <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ ('https://righnews.gerdoo.app/article/' + article.id|string) | urlencode }}"
+         target="_blank" rel="noopener"
+         class="bg-[#0a66c2] text-paper px-4 py-2 text-sm hover:opacity-90 transition-opacity">
+        💼 لینکدین
+      </a>
+    </div>
+  </div>
+
+  <!-- مقالات دیگر -->
   {% if others %}
-  <section class="mt-12 fade-up" style="animation-delay:400ms">
-    <h3 class="font-display text-2xl mb-5">مقالات دیگر</h3>
+  <section class="mt-12 fade-up" style="animation-delay: 420ms">
+    <h3 class="font-display text-2xl mb-5">📚 مقالات دیگر</h3>
     <div class="divide-y divide-ink/5 bg-white border border-ink/10">
       {% for o in others %}
       <a href="/article/{{ o.id }}" class="group flex items-center gap-4 px-6 py-4 hover:bg-paper transition-colors">
-        <span class="font-mono text-xl text-ink/20 group-hover:text-accent transition-colors w-8">{{ loop.index | fanum }}</span>
-        <span class="flex-1 font-medium group-hover:text-brand transition-colors">{{ o.title_persian }}</span>
-        <span class="text-brand opacity-0 group-hover:opacity-100 transition-opacity">←</span>
+        {% if o.image_url %}
+        <div class="w-14 h-14 shrink-0 image-wrapper bg-gray-100">
+          <img src="{{ o.image_url }}" alt="" class="w-full h-full object-cover" loading="lazy">
+        </div>
+        {% else %}
+        <div class="w-14 h-14 shrink-0 bg-gray-100 flex items-center justify-center text-ink/20 font-display">
+          #{{ o.id }}
+        </div>
+        {% endif %}
+        
+        <span class="flex-1 min-w-0">
+          <span class="block font-medium group-hover:text-brand transition-colors line-clamp-2">
+            {{ o.title_persian }}
+          </span>
+          <span class="block text-xs text-ink/40 mt-0.5">{{ o.published_at | fadate }}</span>
+        </span>
+        <span class="text-brand opacity-0 group-hover:opacity-100 transition-opacity shrink-0">←</span>
       </a>
       {% endfor %}
     </div>
   </section>
   {% endif %}
+
 </article>
 
 {% endblock %}

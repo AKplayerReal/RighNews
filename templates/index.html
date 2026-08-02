@@ -1,7 +1,14 @@
 {% extends "base.html" %}
+
+{% block head_extra %}
+<link rel="canonical" href="https://righnews.gerdoo.app/">
+{% endblock %}
+
 {% block content %}
 
-<!-- ── سیم خبری متحرک ── -->
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 📡 سیم خبری متحرک                                 -->
+<!-- ═══════════════════════════════════════════════════ -->
 {% if articles %}
 <div class="bg-ink text-paper overflow-hidden border-b-2 border-accent">
   <div class="flex items-center">
@@ -11,7 +18,7 @@
     </div>
     <div class="overflow-hidden flex-1">
       <div class="flex w-max animate-ticker gap-10 px-6 py-1.5 text-sm">
-        {% for pass in range(2) %}
+        {% for i in range(2) %}
           {% for a in articles %}
           <a href="/article/{{ a.id }}" class="flex items-center gap-2 whitespace-nowrap hover:text-accent transition-colors">
             <span class="font-mono text-accent text-xs">#{{ a.id }}</span>
@@ -25,7 +32,9 @@
 </div>
 {% endif %}
 
-<!-- ── سردر روزنامه ── -->
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 🗞️ سردر روزنامه                                    -->
+<!-- ═══════════════════════════════════════════════════ -->
 <header class="border-b-2 border-ink newsprint">
   <div class="max-w-6xl mx-auto px-4 py-8 flex flex-wrap items-end justify-between gap-6">
     <div>
@@ -48,29 +57,52 @@
   </div>
 </header>
 
-<!-- ── سرمقاله + تازه‌ترین‌ها ── -->
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 📰 سرمقاله + تازه‌ترین‌ها                          -->
+<!-- ═══════════════════════════════════════════════════ -->
 {% if not q and lead %}
 <section class="max-w-6xl mx-auto px-4 py-10 grid lg:grid-cols-12 gap-8">
 
-  <!-- سرمقاله — پنل تیره -->
+  <!-- مقاله اصلی (پنل تیره با تصویر پس‌زمینه) -->
   <div class="lg:col-span-7 fade-up">
     <a href="/article/{{ lead.id }}" class="group block bg-ink text-paper h-full relative overflow-hidden">
-      <span class="absolute top-0 right-0 w-full h-1.5 bg-accent"></span>
-      <span class="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-paper/20 group-hover:border-accent transition-colors"></span>
-      <span class="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-paper/20 group-hover:border-accent transition-colors"></span>
-      <div class="p-8 md:p-12 flex flex-col h-full min-h-[360px]">
+      
+      <!-- تصویر پس‌زمینه -->
+      {% if lead.image_url %}
+      <div class="absolute inset-0 image-wrapper">
+        <img src="{{ lead.image_url }}" alt="" 
+             class="w-full h-full object-cover opacity-30 group-hover:opacity-50"
+             loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/40"></div>
+      </div>
+      {% endif %}
+
+      <!-- نوار کهربایی بالا -->
+      <span class="absolute top-0 right-0 w-full h-1.5 bg-accent z-10"></span>
+
+      <!-- علامت‌های چاپ -->
+      <span class="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-paper/20 group-hover:border-accent transition-colors z-10"></span>
+      <span class="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-paper/20 group-hover:border-accent transition-colors z-10"></span>
+
+      <div class="relative z-10 p-8 md:p-12 flex flex-col h-full min-h-[360px]">
         <div class="flex items-center gap-3 text-xs mb-7">
           <span class="bg-accent text-ink font-bold px-2.5 py-1">سرمقاله</span>
           <span class="font-mono text-paper/50" dir="ltr">{{ lead.source_type }}</span>
           <span class="font-mono text-paper/30 ms-auto" dir="ltr">#{{ lead.id }}</span>
         </div>
-        <h2 class="font-display text-4xl md:text-[3.4rem] leading-[1.1] mb-4 group-hover:text-accent transition-colors duration-300">
+
+        <h2 class="font-display text-4xl md:text-[3.4rem] leading-[1.1] mb-4 group-hover:text-accent transition-colors duration-300 drop-shadow-lg">
           {{ lead.title_persian }}
         </h2>
-        <p class="font-mono text-sm text-paper/40 mb-7" dir="ltr">{{ lead.title_english }}</p>
-        <p class="text-paper/70 leading-8 flex-1">{{ lead.content_persian[:250] }}…</p>
+
+        <p class="font-mono text-sm text-paper/60 mb-7" dir="ltr">{{ lead.title_english }}</p>
+
+        <p class="text-paper/80 leading-8 line-clamp-3 flex-1">
+          {{ lead.content_persian[:250] }}…
+        </p>
+
         <div class="flex items-center justify-between mt-9 pt-6 border-t border-paper/10">
-          <span class="text-xs text-paper/50">{{ lead.published_at | fadate }}</span>
+          <span class="text-xs text-paper/60">{{ lead.published_at | fadate }}</span>
           <span class="flex items-center gap-2 text-accent font-bold">
             مطالعه کامل
             <span class="transition-transform duration-300 group-hover:-translate-x-2">←</span>
@@ -87,22 +119,35 @@
         <h3 class="font-display text-2xl">تازه‌ترین‌ها</h3>
         <span class="text-brand">🕐</span>
       </div>
+
       <div class="flex-1 divide-y divide-ink/5">
         {% for a in latest %}
         <a href="/article/{{ a.id }}" class="group flex items-center gap-4 px-6 py-4 hover:bg-paper transition-colors">
-          <span class="font-mono text-2xl text-ink/20 group-hover:text-accent transition-colors w-8">
-            {{ "%02d"|format(loop.index) | fanum }}
-          </span>
-          <span class="flex-1">
-            <span class="block font-medium leading-6 group-hover:text-brand transition-colors">{{ a.title_persian }}</span>
+          {% if a.image_url %}
+          <div class="w-16 h-16 shrink-0 image-wrapper bg-gray-100">
+            <img src="{{ a.image_url }}" alt="" class="w-full h-full object-cover" loading="lazy">
+          </div>
+          {% else %}
+          <div class="w-16 h-16 shrink-0 bg-gray-100 flex items-center justify-center text-ink/20 font-display text-xl">
+            {{ "%02d"|format(loop.index) }}
+          </div>
+          {% endif %}
+          
+          <span class="flex-1 min-w-0">
+            <span class="block font-medium leading-6 group-hover:text-brand transition-colors line-clamp-2">
+              {{ a.title_persian }}
+            </span>
             <span class="block text-xs text-ink/40 mt-0.5">{{ a.published_at | fadate }}</span>
           </span>
         </a>
         {% endfor %}
+        
         {% if not latest %}
         <p class="px-6 py-8 text-sm text-ink/40">هنوز مقاله دیگری پردازش نشده.</p>
         {% endif %}
       </div>
+
+      <!-- نوار آمار زنده -->
       <div class="bg-brand2 text-paper px-6 py-4 grid grid-cols-3 gap-2 text-center">
         <div>
           <p class="font-display text-2xl text-accent">{{ articles|length | fanum }}</p>
@@ -122,7 +167,9 @@
 </section>
 {% endif %}
 
-<!-- ── نوار موتور پردازش ── -->
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ⚙️ نوار موتور پردازش                              -->
+<!-- ═══════════════════════════════════════════════════ -->
 <section class="border-y-2 border-ink bg-white">
   <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
     <span class="flex items-center gap-2 font-medium">
@@ -139,14 +186,23 @@
   </div>
 </section>
 
-<!-- ── آرشیو + جستجو ── -->
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 🔍 آرشیو با جستجو                                  -->
+<!-- ═══════════════════════════════════════════════════ -->
 <main class="max-w-6xl mx-auto px-4 py-12">
   <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-    <h2 class="font-display text-3xl">{% if q %}نتایج جستجو{% else %}آرشیو مقالات{% endif %}</h2>
+    <h2 class="font-display text-3xl">
+      {% if q %}نتایج جستجو{% else %}آرشیو مقالات{% endif %}
+    </h2>
     <form action="/" method="get" class="relative w-full sm:w-80">
       <input name="q" value="{{ q }}" placeholder="جستجو در ترجمه‌ها…"
-        class="w-full bg-white border border-ink/15 px-4 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all">
-      <button type="submit" class="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-brand transition-colors">🔍</button>
+        class="w-full bg-white border border-ink/15 pr-4 pl-10 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all">
+      <button type="submit" class="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-brand transition-colors" aria-label="جستجو">
+        🔍
+      </button>
+      {% if q %}
+      <a href="/" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-signal hover:underline">✕ پاک کردن</a>
+      {% endif %}
     </form>
   </div>
 
@@ -160,20 +216,51 @@
     <a href="/article/{{ a.id }}"
        class="group block bg-white border border-ink/10 relative overflow-hidden hover:border-brand/40 transition-colors duration-300 fade-up"
        style="animation-delay: {{ loop.index0 * 80 }}ms">
-      <span class="absolute top-0 right-0 h-1 w-10 bg-accent transition-all duration-500 group-hover:w-full"></span>
+
+      <!-- تصویر مقاله -->
+      {% if a.image_url %}
+      <div class="h-48 image-wrapper relative">
+        <img src="{{ a.image_url }}" alt="{{ a.title_persian }}" 
+             class="w-full h-full object-cover"
+             loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
+      </div>
+      {% endif %}
+
+      <!-- نوار کهربایی بالا -->
+      <span class="absolute {% if a.image_url %}top-48{% else %}top-0{% endif %} right-0 h-1 w-10 bg-accent transition-all duration-500 group-hover:w-full z-10"></span>
+
       <div class="p-6">
+        <!-- بج‌ها -->
         <div class="flex items-center gap-3 mb-3 text-xs">
           <span class="font-mono bg-ink text-paper px-2 py-0.5">{{ a.source_type }}</span>
           {% if a.verified %}
-          <span class="flex items-center gap-1 text-mint font-medium">✓ راستی‌آزمایی شد</span>
+          <span class="flex items-center gap-1 text-mint font-medium">
+            ✓ راستی‌آزمایی شد
+          </span>
           {% else %}
-          <span class="flex items-center gap-1 text-signal font-medium">⚠ در حال بررسی</span>
+          <span class="flex items-center gap-1 text-signal font-medium">
+            ⚠ در حال بررسی
+          </span>
           {% endif %}
+          <span class="font-mono text-ink/30 ms-auto" dir="ltr">#{{ a.id }}</span>
         </div>
-        <h3 class="font-display text-2xl leading-snug mb-2 group-hover:text-brand transition-colors">{{ a.title_persian }}</h3>
-        <p class="text-sm text-ink/60 font-mono mb-4 truncate" dir="ltr">{{ a.title_english }}</p>
-        <p class="text-ink/75 leading-7 mb-5">{{ a.content_persian[:160] }}…</p>
-        <div class="flex items-center justify-between text-sm">
+
+        <!-- عناوین -->
+        <h3 class="font-display text-2xl leading-snug mb-2 group-hover:text-brand transition-colors">
+          {{ a.title_persian }}
+        </h3>
+        <p class="text-sm text-ink/60 font-mono mb-4 truncate" dir="ltr">
+          {{ a.title_english }}
+        </p>
+
+        <!-- خلاصه -->
+        <p class="text-ink/75 leading-7 mb-5 line-clamp-2">
+          {{ a.content_persian[:160] }}…
+        </p>
+
+        <!-- فوتر کارت -->
+        <div class="flex items-center justify-between text-sm pt-4 border-t border-ink/5">
           <span class="text-ink/50">{{ a.published_at | fadate }}</span>
           <span class="flex items-center gap-1 text-brand font-medium">
             مطالعه
@@ -187,16 +274,29 @@
   {% else %}
   <div class="text-center py-20 border border-dashed border-ink/20">
     <p class="font-display text-3xl text-ink/30">چیزی پیدا نشد</p>
-    <p class="text-ink/50 text-sm mt-3">عبارت دیگری را امتحان کنید.</p>
+    <p class="text-ink/50 text-sm mt-3">
+      {% if q %}عبارت دیگری را امتحان کنید.{% else %}هنوز مقاله‌ای پردازش نشده است.{% endif %}
+    </p>
+    {% if q %}
+    <a href="/" class="inline-block mt-4 bg-brand text-paper px-6 py-2 font-medium hover:bg-brand2 transition-colors">
+      پاک کردن جستجو
+    </a>
+    {% endif %}
   </div>
   {% endif %}
 </main>
 
-<!-- ── پانوشت ── -->
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 📎 پانوشت                                          -->
+<!-- ═══════════════════════════════════════════════════ -->
 <footer class="bg-ink text-paper/70 mt-8">
   <div class="max-w-6xl mx-auto px-4 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
-    <p class="font-display text-3xl text-paper">رای‌<span class="text-accent">نیوز</span></p>
-    <p class="text-xs font-mono" dir="ltr">FastAPI · DeepSeek · PostgreSQL — on Gerdoo ☁</p>
+    <p class="font-display text-3xl text-paper">
+      رای‌<span class="text-accent">نیوز</span>
+    </p>
+    <p class="text-xs font-mono" dir="ltr">
+      FastAPI · DeepSeek · PostgreSQL — on Gerdoo ☁
+    </p>
   </div>
 </footer>
 

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Lalezar&amp;display=swap');
+      .logo-text { font-family: 'Lalezar', Arial, sans-serif; }
+    </style>
+  </defs>
+  
+  <!-- پس‌زمینه -->
+  <rect width="120" height="40" fill="#101a24"/>
+  
+  <!-- نوار کهربایی بالا -->
+  <rect x="0" y="0" width="120" height="3" fill="#ffb020"/>
+  
+  <!-- متن -->
+  <text x="60" y="28" text-anchor="middle" class="logo-text" font-size="20" fill="#f2f5f4">
+    <tspan fill="#f2f5f4">رای‌</tspan><tspan fill="#ffb020">نیوز</tspan>
+  </text>
+</svg>
