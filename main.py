@@ -4,8 +4,11 @@ from openai import OpenAI
 from sqlalchemy.orm import Session
 import os
 import uvicorn
-
 from database import init_db, get_db, Article
+from fastapi import Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+import jdatetime
 
 # ============================================
 # راه‌اندازی اولیه FastAPI
@@ -15,8 +18,35 @@ app = FastAPI(
     description="Modular AI News Agency for Persian Tech News",
     version="1.0.0"
 )
-
 # ============================================
+# قالب‌های HTML (سایت رای‌نیوز)
+# ============================================
+templates = Jinja2Templates(directory="templates")
+
+FA_DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
+
+def fa_date(value):
+    """تبدیل تاریخ میلادی به شمسی فارسی"""
+    try:
+        d = value.date() if hasattr(value, "date") else value
+        return jdatetime.date.fromgregorian(date=d).strftime("%d %B %Y").translate(FA_DIGITS)
+    except Exception:
+        return "—"
+
+def fa_num(value):
+    """تبدیل اعداد به فارسی"""
+    return str(value).translate(FA_DIGITS)
+
+templates.env.filters["fadate"] = fa_date
+templates.env.filters["fanum"] = fa_num
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_error_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404 and "text/html" in request.headers.get("accept", ""):
+        return templates.TemplateResponse(request, "404.html", status_code=404)
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)# ============================================
 # مدل‌های Pydantic
 # ============================================
 class ArticleRequest(BaseModel):
@@ -41,22 +71,96 @@ async def startup_event():
 # ============================================
 # Endpointها
 # ============================================
-
-@app.get("/")
-def read_root():
+@app.get("/api")
+def api_root():
+    """اطلاعات سیستم (JSON) — برای تست و برنامه‌های دیگر"""
     return {
-        "message": "RighNews Core is alive! 🚀",
-        "service": "Modular AI News Agency",
+        "service": "RayNews Core API",
+        "status": "alive",
         "version": "1.0.0",
-        "model": "DeepSeek V4 Flash via GapGPT",
         "endpoints": {
-            "docs": "/docs",
+            "website": "/",
+            "articles_list": "/articles",
+            "article_detail": "/articles/{id}",
+            "process_article": "/process-article",
             "health": "/health",
-            "translate": "/translate-test",
-            "database_test": "/db-test"
-        }
+            "db_test": "/db-test",
+            "docs": "/docs",
+        },
     }
+# ============================================
+# 🌐 صفحات HTML سایت رای‌نیوز
+# ============================================
 
+# ============================================
+# 🌐 صفحات HTML سایت رای‌نیوز
+# ============================================
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request, q: str = "", db: Session = Depends(get_db)):
+    """صفحه اصلی سایت — سردر روزنامه"""
+    articles = []
+    if db is not None:
+        articles = db.query(Article).order_by(Article.created_at.desc()).all()
+
+    q = q.strip()
+    if q:
+        needle = q.lower()
+        matches = [
+            a for a in articles
+            if needle in " ".join([
+                a.title_persian or "", a.title_english or "",
+                a.content_persian or "", a.content_english or ""
+            ]).lower()
+        ]
+    else:
+        matches = articles
+
+    # تاریخ شمسی (ضدخطا)
+    try:
+        today = jdatetime.date.today().strftime("%A، %d %B %Y").translate(FA_DIGITS)
+    except Exception:
+        today = jdatetime.date.today().strftime("%d %B %Y").translate(FA_DIGITS)
+
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {
+            "articles": articles,
+            "lead": articles[0] if articles and not q else None,
+            "latest": articles[1:6] if not q else [],
+            "grid": (articles[1:] if len(articles) > 1 else articles) if not q else matches,
+            "q": q,
+            "verified_count": sum(1 for a in articles if a.verified),
+            "today": today,
+        },
+    )
+
+
+@app.get("/article/{article_id}", response_class=HTMLResponse)
+def article_page(request: Request, article_id: int, db: Session = Depends(get_db)):
+    """صفحه داخلی مقاله — نمایش دوزبانه"""
+    article = None
+    others = []
+    if db is not None:
+        article = db.query(Article).filter(Article.id == article_id).first()
+        if article:
+            others = (
+                db.query(Article)
+                .filter(Article.id != article_id)
+                .order_by(Article.created_at.desc())
+                .limit(3)
+                .all()
+            )
+
+    if not article:
+        return templates.TemplateResponse(request, "404.html", status_code=404)
+
+    return templates.TemplateResponse(
+        request,
+        "article.html",
+        {"article": article, "others": others},
+    )
 @app.get("/health")
 def health_check():
     return {

@@ -88,7 +88,8 @@ def init_db():
 
 def get_db():
     if not SessionLocal:
-        raise Exception("Database not available")
+        yield None
+        return
     db = SessionLocal()
     try:
         yield db

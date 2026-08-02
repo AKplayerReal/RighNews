@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}رای‌نیوز | آژانس خبری هوش مصنوعی{% endblock %}</title>
+  <meta name="description" content="{% block description %}ترجمه و راستی‌آزمایی خودکار مقالات علمی هوش مصنوعی به فارسی{% endblock %}">
+
+  <!-- فونت‌ها: لاله‌زار (تیتر) + وزیرمتن (متن) + مونو (فنی) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#101a24", paper: "#f2f5f4", brand: "#0d5c52",
+            brand2: "#0a4740", accent: "#ffb020", signal: "#e5484d", mint: "#129d74"
+          },
+          fontFamily: {
+            display: ["Lalezar", "Vazirmatn", "sans-serif"],
+            body: ["Vazirmatn", "system-ui", "sans-serif"],
+            mono: ["IBM Plex Mono", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(50%); } }
+    @keyframes blink  { 0%,100% { opacity:1; } 50% { opacity:.25; } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+    .animate-ticker { animation: ticker 60s linear infinite; }
+    .animate-ticker:hover { animation-play-state: paused; }
+    .live-dot { animation: blink 1.6s ease-in-out infinite; }
+    .fade-up { animation: fadeUp .7s ease-out both; }
+    .newsprint { background-image: radial-gradient(rgba(16,26,36,.06) 1px, transparent 1px); background-size: 20px 20px; }
+    ::selection { background:#ffb020; color:#101a24; }
+    body { font-family: "Vazirmatn", system-ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-paper text-ink antialiased">
+  {% block content %}{% endblock %}
+</body>
+</html>

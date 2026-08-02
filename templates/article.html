@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title_persian }} | رای‌نیوز{% endblock %}
+{% block description %}{{ article.content_persian[:150] }}{% endblock %}
+{% block content %}
+
+<div class="bg-ink text-paper">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2 hover:text-accent transition-colors text-sm">
+      → بازگشت به صفحه اصلی
+    </a>
+    <span class="font-display text-xl">رای‌<span class="text-accent">نیوز</span></span>
+  </div>
+</div>
+
+<article class="max-w-5xl mx-auto px-4 py-12">
+  <header class="mb-10 fade-up">
+    <div class="flex flex-wrap items-center gap-3 text-xs mb-5">
+      <span class="font-mono bg-ink text-paper px-2 py-1" dir="ltr">{{ article.source_type }}</span>
+      {% if article.verified %}
+      <span class="bg-mint/10 text-mint px-3 py-1 font-semibold">✓ راستی‌آزمایی شد</span>
+      {% else %}
+      <span class="bg-signal/10 text-signal px-3 py-1 font-semibold">⚠ نیاز به بازبینی</span>
+      {% endif %}
+      <span class="text-ink/50">{{ article.published_at | fadate }}</span>
+    </div>
+    <h1 class="font-display text-4xl md:text-6xl leading-[1.15] mb-4">{{ article.title_persian }}</h1>
+    <p class="font-mono text-ink/50 text-sm md:text-base" dir="ltr">{{ article.title_english }}</p>
+  </header>
+
+  <div class="border-s-4 border-brand bg-brand/5 p-5 mb-10 flex gap-3 fade-up" style="animation-delay:120ms">
+    <span class="text-2xl">🛡️</span>
+    <div>
+      <h2 class="font-bold mb-1">گزارش راستی‌آزمایی</h2>
+      <p class="text-sm leading-7 text-ink/75">{{ article.fact_check_notes }}</p>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-8 items-start">
+    <section class="bg-white border border-ink/10 p-7 fade-up" style="animation-delay:200ms">
+      <h2 class="font-display text-2xl text-brand mb-5">ترجمه فارسی</h2>
+      <p class="leading-9 text-lg text-ink/85">{{ article.content_persian }}</p>
+    </section>
+    <section class="bg-ink text-paper p-7 lg:sticky lg:top-6 fade-up" style="animation-delay:280ms" dir="ltr">
+      <h2 class="font-mono text-sm text-accent mb-5">ORIGINAL ABSTRACT</h2>
+      <p class="leading-8 text-paper/80 text-[15px]">{{ article.content_english }}</p>
+    </section>
+  </div>
+
+  <footer class="mt-10 bg-white border border-ink/10 p-6 fade-up" style="animation-delay:340ms">
+    <h3 class="font-display text-xl mb-4">شناسنامه مقاله</h3>
+    <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm font-mono" dir="ltr">
+      {% if article.source_url %}
+      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
+        <dt class="text-ink/50">SOURCE</dt>
+        <dd><a href="{{ article.source_url }}" target="_blank" class="text-brand hover:text-accent transition-colors">arxiv.org ↗</a></dd>
+      </div>
+      {% endif %}
+      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
+        <dt class="text-ink/50">TRANSLATOR</dt><dd>deepseek-v4-flash</dd>
+      </div>
+      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
+        <dt class="text-ink/50">PUBLISHED</dt><dd>{{ article.published_at | fadate }}</dd>
+      </div>
+      <div class="flex justify-between gap-4 border-b border-ink/10 pb-2">
+        <dt class="text-ink/50">VERIFIED</dt>
+        <dd class="{{ 'text-mint' if article.verified else 'text-signal' }}">{{ "TRUE" if article.verified else "PENDING" }}</dd>
+      </div>
+    </dl>
+  </footer>
+
+  {% if others %}
+  <section class="mt-12 fade-up" style="animation-delay:400ms">
+    <h3 class="font-display text-2xl mb-5">مقالات دیگر</h3>
+    <div class="divide-y divide-ink/5 bg-white border border-ink/10">
+      {% for o in others %}
+      <a href="/article/{{ o.id }}" class="group flex items-center gap-4 px-6 py-4 hover:bg-paper transition-colors">
+        <span class="font-mono text-xl text-ink/20 group-hover:text-accent transition-colors w-8">{{ loop.index | fanum }}</span>
+        <span class="flex-1 font-medium group-hover:text-brand transition-colors">{{ o.title_persian }}</span>
+        <span class="text-brand opacity-0 group-hover:opacity-100 transition-opacity">←</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</article>
+
+{% endblock %}
