@@ -13,7 +13,24 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from database import Article, get_db
 from image_picker import pick_image
+from fastapi import APIRouter, Request, Form, HTTPException, UploadFile, File, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 
+def get_current_user_or_redirect(request: Request):
+    """Dependency برای احراز هویت"""
+    session_id = request.cookies.get("admin_session")
+    if not session_id:
+        return None
+    
+    session = sessions.get(session_id)
+    if not session:
+        return None
+    
+    if datetime.now() > session["expires"]:
+        del sessions[session_id]
+        return None
+    
+    return session["username"]
 # Router برای پنل ادمین
 admin_router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -46,12 +63,13 @@ def get_current_user(request: Request) -> Optional[str]:
     return session["username"]
 
 def require_auth(request: Request):
-    """چک کردن احراز هویت"""
+    """چک کردن احراز هویت - نسخه اصلاح‌شده"""
     user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=307, headers={"Location": "/admin/login"})
+        # به جای HTTPException، RedirectResponse برمی‌گردانیم
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/admin/login", status_code=303)
     return user
-
 # ============================================
 # صفحه لاگین
 # ============================================
@@ -111,10 +129,15 @@ async def logout(request: Request):
 # ============================================
 # داشبورد
 # ============================================
+
 @admin_router.get("", response_class=HTMLResponse)
 async def dashboard(request: Request, db: Session = Depends(get_db)):
     """داشبورد اصلی"""
-    user = require_auth(request)
+    user = get_current_user_or_redirect(request)
+    if not user:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    
+    # بقیه کد...
     
     # آمار
     total_articles = db.query(Article).count()
@@ -180,8 +203,9 @@ async def list_articles(
 @admin_router.get("/articles/new", response_class=HTMLResponse)
 async def new_article_page(request: Request):
     """فرم افزودن مقاله"""
-    user = require_auth(request)
-    return admin_templates.TemplateResponse(
+    user = get_current_user_or_redirect(request)
+    if not user:
+        return RedirectResponse(url="/admin/login", status_code=303)
         "article_form.html",
         {"request": request, "user": user, "article": None}
     )
@@ -231,7 +255,9 @@ async def create_article(
 @admin_router.get("/articles/{article_id}", response_class=HTMLResponse)
 async def edit_article_page(request: Request, article_id: int, db: Session = Depends(get_db)):
     """فرم ویرایش مقاله"""
-    user = require_auth(request)
+    user = get_current_user_or_redirect(request)
+    if not user:
+        return RedirectResponse(url="/admin/login", status_code=303)
     article = db.query(Article).filter(Article.id == article_id).first()
     
     if not article:
@@ -284,7 +310,9 @@ async def update_article(
 @admin_router.post("/articles/{article_id}/delete")
 async def delete_article(request: Request, article_id: int, db: Session = Depends(get_db)):
     """حذف مقاله"""
-    user = require_auth(request)
+    user = get_current_user_or_redirect(request)
+    if not user:
+        return RedirectResponse(url="/admin/login", status_code=303)
     
     article = db.query(Article).filter(Article.id == article_id).first()
     if not article:
@@ -306,7 +334,9 @@ async def upload_image(
     db: Session = Depends(get_db)
 ):
     """آپلود تصویر برای مقاله"""
-    user = require_auth(request)
+    user = get_current_user_or_redirect(request)
+    if not user:
+        return RedirectResponse(url="/admin/login", status_code=303)
     
     article = db.query(Article).filter(Article.id == article_id).first()
     if not article:
@@ -343,7 +373,9 @@ async def auto_pick_image(
     db: Session = Depends(get_db)
 ):
     """انتخاب خودکار تصویر بر اساس محتوا"""
-    user = require_auth(request)
+    user = get_current_user_or_redirect(request)
+    if not user:
+        return RedirectResponse(url="/admin/login", status_code=303)
     
     article = db.query(Article).filter(Article.id == article_id).first()
     if not article:
