@@ -12,7 +12,7 @@ import jdatetime
 import re
 from fastapi.staticfiles import StaticFiles
 from admin import setup_admin
-
+from admin_panel import admin_router
 # ============================================
 # راه‌اندازی اولیه FastAPI
 # ============================================
@@ -25,7 +25,7 @@ app = FastAPI(
 # فایل‌های استاتیک (تصاویر آپلود شده)
 # ============================================
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
+app.include_router(admin_router)
 # ============================================
 # پنل ادمین (در مسیر /admin)
 # ============================================
